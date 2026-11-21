@@ -53,7 +53,8 @@ O arquivo C incluído é a versão didática em console do Simple Simulator. Nel
 | W / S e Enter | Escolher e confirmar uma opção nos menus. |
 | A, na seleção de fases | Voltar ao menu principal. |
 | I, na seleção de fases | Iniciar o modo infinito. |
-| A / D, durante a partida | Mover uma casa para a esquerda ou para a direita. |
+| A / D, durante a partida | Iniciar um deslize curto para a esquerda ou para a direita. |
+| X | Frear o deslize imediatamente. |
 | Espaço | Atirar. |
 | U | Usar a onda de choque quando a barra estiver cheia. |
 | P | Pausar ou continuar. |
@@ -62,7 +63,7 @@ O arquivo C incluído é a versão didática em console do Simple Simulator. Nel
 | Enter, no resultado | Avançar após vencer ou tentar novamente após perder. |
 | R, no resultado | Reiniciar a tentativa na fase atual; no infinito, voltar à primeira onda. |
 
-Segurar A/D pode repetir o movimento conforme a configuração do teclado. A campanha abre no ritmo normal, e a tecla 1 dá mais tempo para mirar e desviar.
+Cada toque em A/D move uma casa na hora e completa até duas casas após breves intervalos. Segurar estende o deslize conforme a repetição do teclado. A campanha abre no ritmo normal, e a tecla 1 dá mais tempo para mirar e desviar.
 
 ## Fases e modo infinito
 
@@ -108,6 +109,6 @@ Cada desenho do charmap usa blocos de 8 × 8 pixels. Os códigos de 1 a 28 guard
 
 ## Verificação e referência do simulador
 
-O jogo foi montado com o montador original e passou em 27 testes locais que executam as instruções do arquivo compilado. Eles verificam movimento por toque, colisões, limites da tela, bônus, pausa, manobras da frota e o laser com mira marcada. O ritmo em tempo real depende do simulador gráfico.
+O jogo foi montado com o montador original e passou em 27 testes locais que executam as instruções do arquivo compilado. Eles verificam o deslize curto, colisões, limites da tela, bônus, pausa, manobras da frota e o laser com mira marcada. O ritmo em tempo real depende do simulador gráfico.
 
 O processador e as ferramentas da disciplina são do projeto [Processador-ICMC, de Eduardo Valle Simões](https://github.com/simoesusp/Processador-ICMC). O arquivo C acompanha a adaptação para Windows que já estava no material local. Os comentários e a identificação existentes nesse fonte foram preservados.

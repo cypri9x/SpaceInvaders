@@ -15,7 +15,7 @@
 ; Rotinas que precisam conservar um valor usam push/pop antes de retornar.
 ;
 ; O teclado entrega o codigo ASCII da tecla ou 255 quando nao ha entrada.
-; Ele nao informa que a tecla foi solta. A/D movem uma casa a cada entrada do teclado.
+; Ele nao informa que a tecla foi solta. A/D iniciam um deslize curto, X freia.
 ; P pausa, espaco atira e U usa a onda quando a barra esta cheia.
 
 ; Pula os dados abaixo e comeca a executar na rotina main.
@@ -45,7 +45,7 @@ msg_inicio:       string "ENTER PARA INICIAR"
 voltar_enter:     string "PRESSIONE ENTER PARA VOLTAR"
 
 titulo_config:    string "CONFIGURACOES"
-config_controle1: string "A/D: MOVER UM PASSO"
+config_controle1: string "A/D: MOVER   X: FREAR"
 config_controle2: string "ESPACO: TIRO   U: ULTIMATE"
 config_mensagem:  string "P: PAUSA  1/2: RITMO  S: FASES"
 
@@ -74,6 +74,8 @@ explosao_protecao: var #8 ; protege inimigos que acabaram de reaparecer
 tiros: var #32 ; posicao do projetil; zero indica um espaco livre
 tiro_direcoes: var #32 ; 0 = vertical, 1/2 = diagonais para cima, 6/7 = para baixo
 nave_direcao: var #1 ; direcao do passo pedido pelo teclado
+nave_passos: var #1 ; casas que faltam neste deslize
+nave_pausa_passo: var #1 ; quadros ate o proximo passo
 estrelas_tempo: var #1
 estrelas_fase: var #1
 
@@ -453,15 +455,16 @@ tiro_inimigo_tempo: var #1
 mira_inimiga: var #1 ; coluna travada durante o aviso, de 1 a 38
 tempo_aviso: var #1
 tempo_disparo: var #1
-; Cada fase tem uma espera diferente. O aviso dura seis quadros.
+tiro_inimigo_pausa: var #1 ; alterna um quadro de pausa e um de movimento
+; Cada fase tem uma espera diferente. O aviso dura dez quadros.
 cadencia_inimiga: var #7
-static cadencia_inimiga + #0, #19
-static cadencia_inimiga + #1, #16
-static cadencia_inimiga + #2, #14
-static cadencia_inimiga + #3, #12
-static cadencia_inimiga + #4, #15
-static cadencia_inimiga + #5, #10
-static cadencia_inimiga + #6, #8
+static cadencia_inimiga + #0, #36
+static cadencia_inimiga + #1, #32
+static cadencia_inimiga + #2, #30
+static cadencia_inimiga + #3, #28
+static cadencia_inimiga + #4, #30
+static cadencia_inimiga + #5, #24
+static cadencia_inimiga + #6, #20
 atirador: var #1 ; indice do inimigo que vai disparar
 aviso_disparo: var #1 ; posicao da luz antes do disparo
 rajada_pos: var #1
@@ -785,6 +788,8 @@ jogo_comeca:
     store vitoria_tempo, r0
     store onda_linha, r0
     store nave_direcao, r0
+    store nave_passos, r0
+    store nave_pausa_passo, r0
     store estrelas_tempo, r0
     store estrelas_fase, r0
     loadn r1, #alvos
@@ -887,6 +892,12 @@ jogo_loop:
     loadn r1, #' '
     cmp r0, r1
     jeq nave_atira
+    loadn r1, #'x'
+    cmp r0, r1
+    jeq nave_freia
+    loadn r1, #'X'
+    cmp r0, r1
+    jeq nave_freia
     loadn r1, #'u'
     cmp r0, r1
     jeq nave_ultimate
@@ -916,9 +927,27 @@ nave_esquerda:
 nave_direita:
     loadn r0, #2
 nave_muda_direcao:
+    load r1, nave_direcao
+    cmp r0, r1
+    jne nave_inicia_movimento
+    load r1, nave_passos
+    loadn r2, #0
+    cmp r1, r2
+    jeq nave_inicia_movimento
+    ; Repetir a tecla estende o deslize sem pular o intervalo entre passos.
+    loadn r0, #2
+    store nave_passos, r0
+    jmp jogo_tempo
+nave_inicia_movimento:
     store nave_direcao, r0
-    ; Cada evento do teclado move uma casa. Segurar usa a repeticao do sistema.
+    loadn r0, #2
+    store nave_passos, r0
+    store nave_pausa_passo, r0
     call nave_passo
+    jmp jogo_tempo
+nave_freia:
+    loadn r0, #0
+    store nave_passos, r0
     jmp jogo_tempo
 nave_atira:
     call dispara_rajada
@@ -942,6 +971,7 @@ jogo_tempo:
 ; Ordem de um quadro: bonus e prazos, protecao, energia, tiros, inimigos e onda.
 ; O redesenho final recupera partes de objetos apagadas por outros sprites.
 jogo_quadro:
+    call nave_deslize_curto
     call extras_quadro
     call atualiza_protecao
     call ultimate_recarrega
@@ -977,6 +1007,24 @@ jogo_verifica_vitoria:
     store vitoria_tempo, r0
     jmp jogo_loop
 
+nave_deslize_curto:
+    load r0, nave_passos
+    loadn r1, #0
+    cmp r0, r1
+    jeq nave_deslize_fim
+    load r2, nave_pausa_passo
+    dec r2
+    store nave_pausa_passo, r2
+    cmp r2, r1
+    jne nave_deslize_fim
+    dec r0
+    store nave_passos, r0
+    loadn r2, #2
+    store nave_pausa_passo, r2
+    call nave_passo
+nave_deslize_fim:
+    rts
+
 ; Movimento de uma casa, mantendo as asas dentro da moldura.
 nave_passo:
     load r0, nave_pos
@@ -1003,6 +1051,7 @@ desliza_salva:
 desliza_para:
     loadn r0, #0
     store nave_direcao, r0
+    store nave_passos, r0
 desliza_fim:
     rts
 
@@ -2333,6 +2382,7 @@ extras_inicia:
     store escudo, r0
     store tiro_inimigo, r0
     store tiro_inimigo_tempo, r0
+    store tiro_inimigo_pausa, r0
     store atirador, r0
     store aviso_disparo, r0
     store mira_inimiga, r0
@@ -2342,7 +2392,7 @@ extras_inicia:
     add r1, r1, r2
     loadi r1, r1
     store tempo_aviso, r1
-    loadn r2, #6
+    loadn r2, #10
     add r1, r1, r2
     store tempo_disparo, r1
     store combo, r0
@@ -2917,6 +2967,8 @@ inimigo_confere_alcance:
     cmp r3, r4
     jgr inimigo_cancela
     store tiro_inimigo, r0
+    loadn r1, #0
+    store tiro_inimigo_pausa, r1
     jmp inimigo_proximo_atirador
 inimigo_cancela:
     call inimigo_limpa_mira
@@ -2930,6 +2982,15 @@ inimigo_proximo_atirador:
     store atirador, r0
     rts
 inimigo_tiro_move:
+    load r2, tiro_inimigo_pausa
+    loadn r1, #0
+    cmp r2, r1
+    jne inimigo_tiro_avanca
+    loadn r2, #1
+    store tiro_inimigo_pausa, r2
+    rts
+inimigo_tiro_avanca:
+    store tiro_inimigo_pausa, r1
     call apaga_tiro
     loadn r1, #40
     add r0, r0, r1
