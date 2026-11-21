@@ -302,12 +302,12 @@ static estrelas_pos + #29, #983
 static estrelas_pos + #30, #1006
 static estrelas_pos + #31, #1024
 energia: var #1 ; carga da onda: de 0 a 6 segmentos
-energia_tempo: var #1
 vitoria_tempo: var #1
 onda_linha: var #1 ; primeira linha do efeito; zero significa que nao esta ativo
 onda_atingidos: var #8 ; impede contar o mesmo slot duas vezes na mesma onda
 fase_atual: var #1 ; numero de 1 a 7; as tabelas usam fase_atual - 1
-quantidade_inimigos: var #1 ; limita os loops para nao percorrer slots inativos
+quantidade_inimigos: var #1 ; quantidade de slots da formacao
+alvos_restantes: var #1 ; drones vivos nesta frota
 meta_acertos: var #1 ; no chefe, corresponde aos seus 20 pontos de vida
 nivel_selecao: var #1
 passo_inimigo: var #1
@@ -813,7 +813,6 @@ jogo_limpa_tiros:
     loadn r0, #6
     store energia, r0
     loadn r0, #0
-    store energia_tempo, r0
     call ultimate_placar
     load r0, fase_atual
     dec r0
@@ -848,6 +847,8 @@ jogo_limpa_tiros:
     loadn r0, #8
     store proxima_coluna, r0
     call desenha_fundo
+    load r0, quantidade_inimigos
+    store alvos_restantes, r0
     loadn r4, #0
 jogo_cria_inimigos:
     call novo_alvo
@@ -974,10 +975,10 @@ jogo_quadro:
     call nave_deslize_curto
     call extras_quadro
     call atualiza_protecao
-    call ultimate_recarrega
     call atualiza_tiros
     call atualiza_alvos
     call onda_atualiza
+    call frota_avanca
     call inimigo_dispara
     call pulsa_estrelas
     call arena_redesenha
@@ -1072,7 +1073,6 @@ nave_ultimate:
     jne jogo_tempo
     loadn r0, #0
     store energia, r0
-    store energia_tempo, r0
     loadn r1, #onda_atingidos
     loadn r2, #8
 ; Libera as marcas da onda anterior. Reaparecer nao libera a marca da atual.
@@ -1181,7 +1181,7 @@ onda_faixa_loop:
     rts
 
 ; Verifica se o centro do inimigo esta entre as duas linhas do efeito.
-; A marca e feita antes da reposicao para nao pontuar de novo naquele slot.
+; A marca garante um acerto por slot em cada uso de U.
 onda_dano:
     load r0, resultado
     loadn r1, #0
@@ -1226,11 +1226,7 @@ onda_dano_loop:
     loadn r0, #0
     store vitoria_tempo, r0
 onda_dano_repor:
-    load r0, fase_atual
-    loadn r1, #7
-    cmp r0, r1
-    jeq onda_dano_proximo
-    call novo_alvo
+    call elimina_drone
 onda_dano_proximo:
     inc r4
     inc r5
@@ -1271,26 +1267,7 @@ onda_redesenha_proximo:
     call desenha_nave
     rts
 
-; Seis segmentos: carrega com o tempo e ganha dois por acerto normal.
-ultimate_recarrega:
-    load r0, energia
-    loadn r1, #6
-    cmp r0, r1
-    jeq energia_fim
-    load r0, energia_tempo
-    inc r0
-    store energia_tempo, r0
-    loadn r1, #30
-    cmp r0, r1
-    jne energia_fim
-    loadn r0, #0
-    store energia_tempo, r0
-    load r0, energia
-    inc r0
-    store energia, r0
-    call ultimate_placar
-energia_fim:
-    rts
+; Seis segmentos. Cada acerto de tiro normal carrega um segmento.
 ultimate_placar:
     push r0
     push r1
@@ -1383,6 +1360,11 @@ nave_cabine:
     rts
 desenha_alvo:
     push r1
+    loadn r1, #0
+    cmp r0, r1
+    pop r1
+    jeq desenha_alvo_fim
+    push r1
     load r1, fase_atual
     push r2
     loadn r2, #7
@@ -1400,6 +1382,7 @@ desenha_alvo:
     pop r2
     pop r1
     pop r0
+desenha_alvo_fim:
     rts
 ; r0 = posicao e r7 = endereco do slot do tiro; a direcao define o caractere.
 desenha_tiro:
@@ -1493,7 +1476,7 @@ fase_meta_pronta:
     store meta_acertos, r0
     rts
 
-; r4 = indice ativo 0..7. Reposiciona somente a nave atingida/perdida.
+; r4 = indice 0..7. Cria um drone na sua posicao inicial da frota.
 novo_alvo:
     load r0, fase_atual
     dec r0
@@ -1672,6 +1655,10 @@ acerto_procura:
     cmp r2, r1
     jne acerto_proximo
 acerto_compara:
+    loadi r1, r5
+    loadn r2, #0
+    cmp r1, r2
+    jeq acerto_proximo
     ; Aceita o centro ou uma das pontas do inimigo, nao apenas o centro.
     ; O teste separado do chefe considera sua largura maior.
     call colisao_chefe
@@ -1720,8 +1707,7 @@ acerto_atingiu:
     loadn r1, #6
     cmp r0, r1
     jeq acerto_energia_pronta
-    loadn r1, #2
-    add r0, r0, r1
+    inc r0
     loadn r1, #6
     cmp r0, r1
     jgr acerto_energia_limite
@@ -1739,13 +1725,8 @@ acerto_energia_pronta:
     jne acerto_repor
     loadn r0, #1
     store resultado, r0
-    jmp acerto_fim
 acerto_repor:
-    load r0, fase_atual
-    loadn r1, #7
-    cmp r0, r1
-    jeq acerto_fim
-    call novo_alvo
+    call elimina_drone
 acerto_fim:
     pop r5
     pop r4
@@ -1774,6 +1755,9 @@ atualiza_alvos:
     loadn r5, #alvos
 alvos_loop:
     loadi r0, r5
+    loadn r1, #0
+    cmp r0, r1
+    jeq alvo_proximo
     call apaga_sprite
     ; Nas bordas, gasta o passo apenas descendo e vira para o proximo.
     load r1, grupo_virou
@@ -1837,7 +1821,38 @@ frota_chegou:
     loadn r0, #2
     store resultado, r0
     rts
+; So troca de frota quando todos os drones cairem e a onda de choque terminar.
+frota_avanca:
+    loadn r1, #0
+    load r0, resultado
+    cmp r0, r1
+    jne frota_avanca_fim
+    load r0, alvos_restantes
+    cmp r0, r1
+    jne frota_avanca_fim
+    load r0, onda_linha
+    cmp r0, r1
+    jeq frota_reinicia
+frota_avanca_fim:
+    rts
+
+; r5 aponta para o drone atingido. O chefe permanece ate sua vida acabar.
+elimina_drone:
+    load r0, fase_atual
+    loadn r1, #7
+    cmp r0, r1
+    jeq elimina_drone_fim
+    loadn r0, #0
+    storei r5, r0
+    load r0, alvos_restantes
+    dec r0
+    store alvos_restantes, r0
+elimina_drone_fim:
+    rts
+
 frota_reinicia:
+    load r0, quantidade_inimigos
+    store alvos_restantes, r0
     loadn r0, #20
     store grupo_coluna, r0
     loadn r0, #1
@@ -1849,7 +1864,11 @@ frota_reinicia:
     loadn r5, #alvos
 frota_reinicia_loop:
     loadi r0, r5
+    loadn r1, #0
+    cmp r0, r1
+    jeq frota_cria_drone
     call apaga_sprite
+frota_cria_drone:
     call novo_alvo
     inc r4
     inc r5
@@ -2925,10 +2944,21 @@ inimigo_testa_aviso:
     cmp r0, r1
     jle inimigo_tiro_fim
     mov r3, r0
+    load r0, alvos_restantes
+    loadn r1, #0
+    cmp r0, r1
+    jeq inimigo_tiro_fim
+inimigo_busca_atirador:
     load r0, atirador
     loadn r1, #alvos
     add r0, r0, r1
     loadi r0, r0
+    loadn r1, #0
+    cmp r0, r1
+    jne inimigo_atirador_ativo
+    call inimigo_roda_atirador
+    jmp inimigo_busca_atirador
+inimigo_atirador_ativo:
     loadn r1, #40
     add r0, r0, r1
     ; Deixa pelo menos tres linhas para reagir ao laser.
@@ -2975,6 +3005,7 @@ inimigo_cancela:
 inimigo_proximo_atirador:
     loadn r0, #0
     store tiro_inimigo_tempo, r0
+inimigo_roda_atirador:
     load r0, atirador
     inc r0
     load r1, quantidade_inimigos

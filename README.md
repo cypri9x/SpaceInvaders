@@ -79,6 +79,8 @@ Cada toque em A/D move uma casa na hora e completa até duas casas após breves 
 
 Nas seis primeiras fases, os drones cruzam a arena juntos. Às vezes, a frota faz uma pausa curta e inverte a direção no meio da tela. A descida de uma linha só acontece nas laterais. Se a frota alcançar a base, ela volta ao topo e causa um único dano.
 
+Os drones abatidos ficam fora da formação. Ao derrubar o último, entra uma nova frota pelo topo. Os acertos acumulam até atingir a meta da fase.
+
 Cada fase da campanha começa com três vidas. Os inimigos se revezam para disparar e esperam menos nas fases mais intensas. Uma luz amarela mostra quem vai atirar e marca a coluna do jogador perto da base. O laser segue até essa coluna. Saia da marca para desviar. A pontuação continua ao avançar de fase.
 
 O fundo muda a cada fase. Cinturão de asteroides, planeta com anéis, nebulosa, estação orbital, cometas, lua partida e portais do chefão usam blocos desenhados no charmap.
@@ -97,7 +99,7 @@ A cada quatro acertos pode cair um bônus. Só existe um caindo por vez, e os ti
 
 Para coletar, encoste com qualquer parte da nave. A cabine fica verde com o escudo ativo. O tiro duplo dispara pelas duas pontas da nave. Os bônus e efeitos temporários são reiniciados ao mudar de fase.
 
-A onda começa carregada e consome os seis segmentos da barra. A energia volta com o tempo e com acertos de tiros normais. Cada inimigo, identificado pelo seu espaço no vetor, pode receber um acerto por onda. Contra o chefe, cada onda causa um ponto de dano. Ela não recarrega a própria barra.
+A onda começa carregada e consome os seis segmentos da barra. Cada acerto de tiro normal recupera um segmento e o bônus de energia enche a barra. Contra o chefe, cada onda causa um ponto de dano.
 
 ## Organização do código
 
@@ -109,6 +111,6 @@ Cada desenho do charmap usa blocos de 8 × 8 pixels. Os códigos de 1 a 28 guard
 
 ## Verificação e referência do simulador
 
-O jogo foi montado com o montador original e passou em 27 testes locais que executam as instruções do arquivo compilado. Eles verificam o deslize curto, colisões, limites da tela, bônus, pausa, manobras da frota e o laser com mira marcada. O ritmo em tempo real depende do simulador gráfico.
+O jogo foi montado com o montador original e passou em 29 testes locais que executam as instruções do arquivo compilado. Eles verificam o deslize curto, as colisões, a troca de frotas e a derrota de quem fica parado disparando no centro da primeira fase. O ritmo em tempo real depende do simulador gráfico.
 
 O processador e as ferramentas da disciplina são do projeto [Processador-ICMC, de Eduardo Valle Simões](https://github.com/simoesusp/Processador-ICMC). O arquivo C acompanha a adaptação para Windows que já estava no material local. Os comentários e a identificação existentes nesse fonte foram preservados.
