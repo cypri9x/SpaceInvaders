@@ -43,18 +43,25 @@ sel_sair:         string "       >> SAIR <<       "
 
 ; textos das outras telas
 msg_inicio:       string "ENTER PARA INICIAR"
-voltar_enter:     string "PRESSIONE ENTER PARA VOLTAR"
+voltar_enter:     string "ENTER: VOLTAR"
 
 titulo_config:    string "CONFIGURACOES"
-config_controle1: string "A/D: MOVER   X: FREAR"
-config_controle2: string "ESPACO: TIRO   U: ULTIMATE"
-config_mensagem:  string "P: PAUSA  1/2: RITMO  S: FASES"
+config_secao:     string "CONTROLES"
+config_movimento: string "A/D     MOVER A NAVE"
+config_freio:     string "X       FREAR"
+config_tiro:      string "ESPACO  ATIRAR"
+config_ultimate:  string "U       ONDA DE CHOQUE"
+config_pausa:     string "P       PAUSAR"
+config_ritmo:     string "1 / 2   CALMO / NORMAL"
+config_fases:     string "S       SELECAO DE FASES"
 
 titulo_creditos:  string "CREDITOS"
-nome_1:           string "Gustavo Cypriano"
-nome_2:           string "Adriana Rodrigues"
-nome_3:           string "Mariana Alvares"
-nome_4:           string "Davi de Alcantara"
+creditos_equipe:  string "EQUIPE"
+; O charmap usa os codigos das minusculas para os desenhos de fundo.
+nome_1:           string "GUSTAVO CYPRIANO"
+nome_2:           string "ADRIANA RODRIGUES"
+nome_3:           string "MARIANA ALVARES"
+nome_4:           string "DAVI DE ALCANTARA"
 
 titulo_sair:      string "ATE A PROXIMA!"
 msg_sair:         string "ICMC USP"
@@ -481,7 +488,6 @@ hud_onda: string "ONDA:"
 hud_fase: string "FASE:"
 linha_hud_vazia: string "                                  "
 hud_recorde: string "RECORDE:"
-hud_bonus: string "D: DUPLO  E: ESCUDO  U: ENERGIA"
 ; Sequencias de codigos do charmap. Zero encerra a rotina imprime_str.
 drone_sprite: var #4
 static drone_sprite + #0, #4
@@ -2079,62 +2085,74 @@ jogo_continua:
     store fase_atual, r0
     jmp jogo_comeca
 
-; tela que mostra os controles
+; Uma linha por controle. Todos comecam na mesma coluna.
 tela_config:
     call limpa_tela
     call desenha_moldura
-    loadn r0, #133
+    loadn r0, #173
     loadn r1, #titulo_config
+    loadn r2, #2816
+    call imprime_str
+    loadn r0, #295
+    loadn r1, #config_secao
     loadn r2, #3584
     call imprime_str
-    loadn r0, #491
-    loadn r1, #config_controle1
+
+    loadn r0, #408
+    loadn r1, #config_movimento
     loadn r2, #0
     call imprime_str
-    loadn r0, #530
-    loadn r1, #config_controle2
+    loadn r0, #488
+    loadn r1, #config_freio
     call imprime_str
-    loadn r0, #607
-    loadn r1, #config_mensagem
-    loadn r2, #2560
+    loadn r0, #568
+    loadn r1, #config_tiro
     call imprime_str
-    loadn r0, #644
-    loadn r1, #hud_bonus
-    loadn r2, #512
+    loadn r0, #648
+    loadn r1, #config_ultimate
     call imprime_str
-    loadn r0, #687
-    loadn r1, #voltar_enter
-    loadn r2, #2048
+    loadn r0, #728
+    loadn r1, #config_pausa
     call imprime_str
-    call espera_enter
-    jmp menu_inicio
+    loadn r0, #808
+    loadn r1, #config_ritmo
+    call imprime_str
+    loadn r0, #888
+    loadn r1, #config_fases
+    call imprime_str
+    jmp tela_voltar_menu
 
 ; tela com os nomes da equipe
 tela_creditos:
     call limpa_tela
     call desenha_moldura
-    loadn r0, #136
+    loadn r0, #176
     loadn r1, #titulo_creditos
-    loadn r2, #3328
+    loadn r2, #2816
+    call imprime_str
+    loadn r0, #337
+    loadn r1, #creditos_equipe
+    loadn r2, #3584
     call imprime_str
 
     loadn r0, #452
     loadn r1, #nome_1
     loadn r2, #0
     call imprime_str
-    loadn r0, #492
+    loadn r0, #532
     loadn r1, #nome_2
     call imprime_str
-    loadn r0, #533
+    loadn r0, #612
     loadn r1, #nome_3
     call imprime_str
-    loadn r0, #572
+    loadn r0, #692
     loadn r1, #nome_4
     call imprime_str
 
-    loadn r0, #687
+tela_voltar_menu:
+    loadn r0, #1013
     loadn r1, #voltar_enter
-    loadn r2, #2048
+    loadn r2, #2816
     call imprime_str
     call espera_enter
     jmp menu_inicio

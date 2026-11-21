@@ -111,6 +111,6 @@ Cada desenho do charmap usa blocos de 8 × 8 pixels. Os códigos de 1 a 28 guard
 
 ## Verificação e referência do simulador
 
-O jogo foi montado com o montador original e passou em 31 testes locais que executam as instruções do arquivo compilado. Eles verificam o movimento ao segurar, o deslize ao soltar, as colisões, a troca de frotas, a vida independente dos chefes e a recarga da ultimate. O ritmo em tempo real depende do simulador gráfico.
+O jogo foi montado com o montador original e passou em 32 testes locais que executam as instruções do arquivo compilado. Eles verificam a navegação em Configurações e Créditos, os controles, as colisões, a troca de frotas, a vida independente dos chefes e a recarga da ultimate. O ritmo em tempo real depende do simulador gráfico.
 
 O processador e as ferramentas da disciplina são do projeto [Processador-ICMC, de Eduardo Valle Simões](https://github.com/simoesusp/Processador-ICMC). O arquivo C acompanha a adaptação para Windows que já estava no material local. Os comentários e a identificação existentes nesse fonte foram preservados.
