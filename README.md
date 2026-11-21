@@ -63,7 +63,7 @@ O arquivo C incluído é a versão didática em console do Simple Simulator. Nel
 | Enter, no resultado | Avançar após vencer ou tentar novamente após perder. |
 | R, no resultado | Reiniciar a tentativa na fase atual; no infinito, voltar à primeira onda. |
 
-Cada toque em A/D move uma casa na hora e completa até duas casas após breves intervalos. Segurar estende o deslize conforme a repetição do teclado. A campanha abre no ritmo normal, e a tecla 1 dá mais tempo para mirar e desviar.
+Cada toque em A/D move uma casa na hora e completa até duas casas após breves intervalos. No simulador original, segurar estende o deslize conforme a repetição do teclado. Uma adaptação local do simulador também pode informar diretamente quando A/D são segurados ou soltos. O jogo reconhece os códigos 128 e 129 para manter o movimento e 130 para completar o deslize e parar. A campanha abre no ritmo normal, e a tecla 1 dá mais tempo para mirar e desviar.
 
 ## Fases e modo infinito
 
@@ -111,6 +111,6 @@ Cada desenho do charmap usa blocos de 8 × 8 pixels. Os códigos de 1 a 28 guard
 
 ## Verificação e referência do simulador
 
-O jogo foi montado com o montador original e passou em 29 testes locais que executam as instruções do arquivo compilado. Eles verificam o deslize curto, as colisões, a troca de frotas e a derrota de quem fica parado disparando no centro da primeira fase. O ritmo em tempo real depende do simulador gráfico.
+O jogo foi montado com o montador original e passou em 30 testes locais que executam as instruções do arquivo compilado. Eles verificam o movimento ao segurar, o deslize ao soltar, as colisões, a troca de frotas e a derrota de quem fica parado disparando no centro da primeira fase. O ritmo em tempo real depende do simulador gráfico.
 
 O processador e as ferramentas da disciplina são do projeto [Processador-ICMC, de Eduardo Valle Simões](https://github.com/simoesusp/Processador-ICMC). O arquivo C acompanha a adaptação para Windows que já estava no material local. Os comentários e a identificação existentes nesse fonte foram preservados.

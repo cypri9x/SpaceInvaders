@@ -15,7 +15,8 @@
 ; Rotinas que precisam conservar um valor usam push/pop antes de retornar.
 ;
 ; O teclado entrega o codigo ASCII da tecla ou 255 quando nao ha entrada.
-; Ele nao informa que a tecla foi solta. A/D iniciam um deslize curto, X freia.
+; A/D iniciam um deslize curto, X freia. O simulador local tambem envia
+; 128/129 ao segurar A/D e 130 ao soltar, para manter o movimento continuo.
 ; P pausa, espaco atira e U usa a onda quando a barra esta cheia.
 
 ; Pula os dados abaixo e comeca a executar na rotina main.
@@ -75,6 +76,7 @@ tiros: var #32 ; posicao do projetil; zero indica um espaco livre
 tiro_direcoes: var #32 ; 0 = vertical, 1/2 = diagonais para cima, 6/7 = para baixo
 nave_direcao: var #1 ; direcao do passo pedido pelo teclado
 nave_passos: var #1 ; casas que faltam neste deslize
+nave_segurando: var #1 ; 1 enquanto o simulador local indica A/D pressionado
 nave_pausa_passo: var #1 ; quadros ate o proximo passo
 estrelas_tempo: var #1
 estrelas_fase: var #1
@@ -789,6 +791,7 @@ jogo_comeca:
     store onda_linha, r0
     store nave_direcao, r0
     store nave_passos, r0
+    store nave_segurando, r0
     store nave_pausa_passo, r0
     store estrelas_tempo, r0
     store estrelas_fase, r0
@@ -866,6 +869,15 @@ jogo_loop:
     loadn r1, #255
     cmp r0, r1
     jeq jogo_tempo
+    loadn r1, #128
+    cmp r0, r1
+    jeq nave_segura_esquerda
+    loadn r1, #129
+    cmp r0, r1
+    jeq nave_segura_direita
+    loadn r1, #130
+    cmp r0, r1
+    jeq nave_solta
     loadn r1, #'p'
     cmp r0, r1
     jeq jogo_pausa
@@ -922,6 +934,20 @@ ritmo_salva:
     loadn r0, #0
     store relogio, r0
     jmp jogo_tempo
+nave_segura_esquerda:
+    loadn r0, #1
+    store nave_segurando, r0
+    jmp nave_muda_direcao
+nave_segura_direita:
+    loadn r0, #1
+    store nave_segurando, r0
+    loadn r0, #2
+    jmp nave_muda_direcao
+nave_solta:
+    loadn r0, #0
+    store nave_segurando, r0
+    ; O contador de passos ja guarda o pequeno deslize apos soltar.
+    jmp jogo_tempo
 nave_esquerda:
     loadn r0, #1
     jmp nave_muda_direcao
@@ -949,6 +975,7 @@ nave_inicia_movimento:
 nave_freia:
     loadn r0, #0
     store nave_passos, r0
+    store nave_segurando, r0
     jmp jogo_tempo
 nave_atira:
     call dispara_rajada
@@ -1018,8 +1045,12 @@ nave_deslize_curto:
     store nave_pausa_passo, r2
     cmp r2, r1
     jne nave_deslize_fim
+    load r2, nave_segurando
+    cmp r2, r1
+    jne nave_mantem_passos
     dec r0
     store nave_passos, r0
+nave_mantem_passos:
     loadn r2, #2
     store nave_pausa_passo, r2
     call nave_passo
@@ -2442,6 +2473,9 @@ grava_ritmo:
 
 ; Durante a pausa so ha leitura de teclado. Nenhum contador do jogo avanca.
 jogo_pausa:
+    loadn r0, #0
+    store nave_passos, r0
+    store nave_segurando, r0
     loadn r0, #1124
     loadn r1, #linha_hud_vazia
     loadn r2, #0
