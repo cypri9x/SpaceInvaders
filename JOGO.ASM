@@ -75,7 +75,7 @@ tiros: var #32 ; posicao do projetil; zero indica um espaco livre
 tiro_direcoes: var #32 ; 0 = vertical, 1/2 = diagonais para cima, 6/7 = para baixo
 nave_direcao: var #1 ; 0 = parada, 1 = esquerda, 2 = direita
 nave_tempo: var #1 ; contador separado para o deslize
-nave_intervalo: var #1 ; metade do intervalo dos inimigos
+nave_intervalo: var #1 ; tres quartos do intervalo dos inimigos
 estrelas_tempo: var #1
 estrelas_fase: var #1
 ; As estrelas ficam entre o placar e a nave, longe da moldura.
@@ -293,8 +293,10 @@ bonus_ciclo: var #1
 bonus_contador: var #1
 duplo_tempo: var #1 ; quadros restantes do tiro duplo
 escudo: var #1 ; 0 = sem escudo, 1 = absorve o proximo dano
-chefe_tiro: var #1 ; um tiro inimigo de cada vez; zero quando nao existe
-chefe_tempo: var #1
+tiro_inimigo: var #1 ; um laser hostil de cada vez; zero quando nao existe
+tiro_inimigo_tempo: var #1
+atirador: var #1 ; indice do inimigo que vai disparar
+aviso_disparo: var #1 ; posicao da luz antes do disparo
 rajada_pos: var #1
 rajada_restante: var #1
 infinito_ajuda: string "I: MODO INFINITO"
@@ -792,10 +794,10 @@ jogo_loop:
     jeq ritmo_normal
     jmp jogo_tempo
 ritmo_calmo:
-    loadn r0, #7200
+    loadn r0, #9000
     jmp ritmo_salva
 ritmo_normal:
-    loadn r0, #4200
+    loadn r0, #5800
 ritmo_salva:
     call grava_ritmo
     loadn r0, #0
@@ -849,6 +851,7 @@ jogo_quadro:
     call atualiza_tiros
     call atualiza_alvos
     call onda_atualiza
+    call inimigo_dispara
     call pulsa_estrelas
     call arena_redesenha
     load r0, resultado
@@ -2274,16 +2277,18 @@ extras_inicia:
     store bonus_pos, r0
     store duplo_tempo, r0
     store escudo, r0
-    store chefe_tiro, r0
-    store chefe_tempo, r0
+    store tiro_inimigo, r0
+    store tiro_inimigo_tempo, r0
+    store atirador, r0
+    store aviso_disparo, r0
     store combo, r0
     store combo_tempo, r0
     rts
 
-; A campanha comeca no ritmo normal. No infinito, cada onda tira 125
-; passagens do intervalo, ate o minimo de 2200 passagens na onda 16.
+; A campanha comeca no ritmo normal. No infinito, cada onda tira 150
+; passagens do intervalo, ate o minimo de 3400 passagens na onda 16.
 configura_ritmo:
-    loadn r0, #4200
+    loadn r0, #5800
     load r1, modo_infinito
     loadn r2, #0
     cmp r1, r2
@@ -2294,14 +2299,15 @@ configura_ritmo:
     jle configura_ritmo_onda
     loadn r1, #16
 configura_ritmo_onda:
-    loadn r2, #125
+    loadn r2, #150
     mul r1, r1, r2
     sub r0, r0, r1
 configura_ritmo_salva:
 grava_ritmo:
     store intervalo, r0
-    loadn r1, #2
-    div r0, r0, r1
+    loadn r1, #4
+    div r1, r0, r1
+    sub r0, r0, r1
     store nave_intervalo, r0
     rts
 
@@ -2461,7 +2467,7 @@ bonus_spawn_fim:
     rts
 
 ; Qualquer dano quebra o combo. O escudo vale para a base inteira: absorve
-; tanto um inimigo que passou quanto um tiro do chefe que acertou a nave.
+; tanto um inimigo que passou quanto um laser inimigo que acertou a nave.
 recebe_dano:
     loadn r0, #0
     store combo, r0
@@ -2512,7 +2518,6 @@ extras_duplo:
     call extras_placar
 extras_bonus:
     call bonus_atualiza
-    call chefe_projetil
 extras_quadro_fim:
     rts
 
@@ -2825,83 +2830,122 @@ chefe_colisoes:
 chefe_fim:
     rts
 
-; Permite um tiro do chefe por vez. Espera 12 quadros para criar o proximo,
-; que cai na coluna em que o chefe estava quando disparou, sem perseguir.
-chefe_projetil:
-    load r0, fase_atual
-    loadn r1, #7
-    cmp r0, r1
-    jne chefe_tiro_fim
-    load r0, chefe_tiro
+; Permite um laser inimigo por vez. Os drones revezam os disparos,
+; e o chefe tem uma cadencia propria. O laser segue reto na coluna de origem.
+inimigo_dispara:
+    load r0, resultado
     loadn r1, #0
     cmp r0, r1
-    jne chefe_tiro_move
-    load r0, chefe_tempo
-    inc r0
-    store chefe_tempo, r0
-    loadn r1, #12
+    jne inimigo_tiro_fim
+    load r0, aviso_disparo
     cmp r0, r1
-    jne chefe_tiro_fim
-    loadn r0, #0
-    store chefe_tempo, r0
-    load r0, alvos
+    jeq inimigo_testa_tiro
+    call apaga_tiro
+    store aviso_disparo, r1
+inimigo_testa_tiro:
+    load r0, tiro_inimigo
+    cmp r0, r1
+    jne inimigo_tiro_move
+    load r0, tiro_inimigo_tempo
+    inc r0
+    store tiro_inimigo_tempo, r0
+    loadn r1, #18
+    loadn r2, #25
+    load r3, fase_atual
+    loadn r4, #7
+    cmp r3, r4
+    jne inimigo_testa_aviso
+    loadn r1, #10
+    loadn r2, #16
+inimigo_testa_aviso:
+    cmp r0, r1
+    jle inimigo_tiro_fim
+    mov r3, r0
+    load r0, atirador
+    loadn r1, #alvos
+    add r0, r0, r1
+    loadi r0, r0
     loadn r1, #40
     add r0, r0, r1
-    store chefe_tiro, r0
-    jmp chefe_tiro_desenha
-chefe_tiro_move:
+    ; Deixa pelo menos tres linhas para reagir ao laser.
+    loadn r1, #920
+    cmp r0, r1
+    jgr inimigo_proximo_atirador
+    cmp r3, r2
+    jgr inimigo_lanca_tiro
+    store aviso_disparo, r0
+    rts
+inimigo_lanca_tiro:
+    store tiro_inimigo, r0
+inimigo_proximo_atirador:
+    loadn r0, #0
+    store tiro_inimigo_tempo, r0
+    load r0, atirador
+    inc r0
+    load r1, quantidade_inimigos
+    mod r0, r0, r1
+    store atirador, r0
+    rts
+inimigo_tiro_move:
     call apaga_tiro
     loadn r1, #40
     add r0, r0, r1
-    store chefe_tiro, r0
+    store tiro_inimigo, r0
     loadn r1, #1040
     cmp r0, r1
-    jle chefe_tiro_desenha
+    jle inimigo_tiro_fim
     load r1, nave_pos
     dec r1
     cmp r0, r1
-    jeq chefe_tiro_dano
+    jeq inimigo_tiro_dano
     inc r1
     cmp r0, r1
-    jeq chefe_tiro_dano
+    jeq inimigo_tiro_dano
     inc r1
     cmp r0, r1
-    jne chefe_tiro_remove
-chefe_tiro_dano:
+    jne inimigo_tiro_remove
+inimigo_tiro_dano:
     call recebe_dano
     load r0, vidas
     loadn r1, #0
     cmp r0, r1
-    jne chefe_tiro_remove
+    jne inimigo_tiro_remove
     loadn r0, #2
     store resultado, r0
-chefe_tiro_remove:
+inimigo_tiro_remove:
     loadn r0, #0
-    store chefe_tiro, r0
+    store tiro_inimigo, r0
     call desenha_nave
     rts
-chefe_tiro_desenha:
-    loadn r1, #2319 ; projetil do chefe
+inimigo_tiro_desenha:
+    loadn r1, #2319 ; laser vermelho, tile 15
     outchar r1, r0
-chefe_tiro_fim:
+inimigo_tiro_fim:
     rts
 
 ; Repinta todas as camadas apos mover: uma explosao ou bonus nao apaga
 ; partes de outra nave. A onda aparece na frente dos demais objetos.
 arena_redesenha:
     call desenha_estrelas
+    load r0, aviso_disparo
+    loadn r1, #0
+    cmp r0, r1
+    jeq arena_desenha_objetos
+    loadn r1, #2844 ; luz de carga amarela, tile 28
+    outchar r1, r0
+arena_desenha_objetos:
     call onda_redesenha
     load r0, bonus_pos
     loadn r1, #0
     cmp r0, r1
-    jeq arena_tiro_chefe
+    jeq arena_tiro_inimigo
     call bonus_desenha
-arena_tiro_chefe:
-    load r0, chefe_tiro
+arena_tiro_inimigo:
+    load r0, tiro_inimigo
     loadn r1, #0
     cmp r0, r1
     jeq arena_onda
-    call chefe_tiro_desenha
+    call inimigo_tiro_desenha
 arena_onda:
     load r0, onda_linha
     loadn r1, #0

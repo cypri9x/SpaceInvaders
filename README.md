@@ -79,7 +79,7 @@ A nave dá um passo no primeiro toque e ao inverter a direção. A campanha abre
 | Mergulho | Oito inimigos que avançam na direção do jogador. | 40 acertos |
 | Chefão | Nave maior que patrulha o topo e dispara para baixo. | 20 pontos de dano |
 
-Cada fase da campanha começa com três vidas. Um inimigo que atravessa a parte inferior da arena causa dano, mesmo que passe longe da nave. Os tiros do chefe causam dano ao atingir uma das três posições ocupadas pelo jogador. A pontuação continua ao avançar de fase.
+Cada fase da campanha começa com três vidas. Os inimigos se revezam para disparar. Uma luz amarela indica quem vai atirar, e o laser vermelho desce na coluna de onde saiu. Você perde uma vida se o laser atingir a nave ou se um inimigo atravessar a arena. A pontuação continua ao avançar de fase.
 
 No modo infinito, as seis formações comuns se repetem, sem o chefe. A próxima onda começa automaticamente, conservando vidas e pontos. A velocidade aumenta até a onda 16; o indicador de onda para em 99. Escolher 1 ou 2 altera manualmente o ritmo da onda atual.
 
@@ -90,7 +90,7 @@ Acertos com intervalo de até 45 quadros aumentam o combo até **X5**. Cada acer
 A cada quatro acertos pode cair um bônus. Só existe um caindo por vez, e os tipos alternam:
 
 - **D:** tiro duplo durante 180 quadros.
-- **E:** escudo que absorve um dano, de tiro do chefe ou de inimigo que passou.
+- **E:** escudo que absorve um dano de laser ou de inimigo que passou.
 - **U:** recarga completa da onda de choque.
 
 Para coletar, encoste com qualquer parte da nave. O placar mostra `D:1` e `E:1` quando os efeitos estão ativos. Os bônus e efeitos temporários são reiniciados ao mudar de fase.
@@ -103,10 +103,10 @@ As posições da tela são calculadas por `linha * 40 + coluna`. O início de `J
 
 Os inimigos usam vetores de até oito posições; os tiros do jogador têm 32 espaços. O chefe usa o primeiro espaço de inimigo e possui uma rotina própria de movimento. A leitura do teclado ocorre entre as atualizações dos quadros, e a pausa não avança os temporizadores.
 
-Cada desenho do charmap usa blocos de 8 × 8 pixels. Os códigos de 1 a 27 guardam os desenhos do jogo, e as letras e os números continuam disponíveis para o placar e os menus. A nave e os drones juntam três blocos na horizontal. O chefe junta sete. O Assembly envia o código do bloco e a cor pela instrução `OUTCHAR`. As estrelas alternam o brilho em grupos e são desenhadas antes dos objetos da arena.
+Cada desenho do charmap usa blocos de 8 × 8 pixels. Os códigos de 1 a 28 guardam os desenhos do jogo, e as letras e os números continuam disponíveis para o placar e os menus. A nave e os drones juntam três blocos na horizontal. O chefe junta sete. O Assembly envia o código do bloco e a cor pela instrução `OUTCHAR`. As estrelas alternam o brilho em grupos e são desenhadas antes dos objetos da arena.
 
 ## Verificação e referência do simulador
 
-Na preparação da entrega, o jogo foi montado com o montador original e passou em 22 testes locais que executam as instruções do arquivo compilado. Eles verificam, entre outros casos, colisões, limites da tela, bônus, pausa e avanço das fases. Essa verificação não substitui a conferência do teclado e da velocidade no simulador gráfico.
+Na preparação da entrega, o jogo foi montado com o montador original e passou em 23 testes locais que executam as instruções do arquivo compilado. Eles verificam, entre outros casos, colisões, limites da tela, bônus, pausa, avanço das fases e o aviso e trajeto do laser inimigo. O ritmo em tempo real depende do simulador gráfico.
 
 O processador e as ferramentas da disciplina são do projeto [Processador-ICMC, de Eduardo Valle Simões](https://github.com/simoesusp/Processador-ICMC). O arquivo C acompanha a adaptação para Windows que já estava no material local. Os comentários e a identificação existentes nesse fonte foram preservados.
