@@ -20,7 +20,7 @@ Além do vídeo, todos os integrantes precisam apresentar o trabalho pessoalment
 | Arquivo | Conteúdo |
 | --- | --- |
 | [JOGO.ASM](JOGO.ASM) | Código completo do jogo, com comentários sobre as variáveis e as rotinas. |
-| [CHARMAP.MIF](CHARMAP.MIF) | Mapa de caracteres usado para desenhar a tela. É o original, sem alterações. |
+| [CHARMAP.MIF](CHARMAP.MIF) | Mapa com os desenhos da nave, dos inimigos, dos tiros, dos bônus e da onda de choque. |
 | [simple_simulator_template.c](simple_simulator_template.c) | Arquivo C inteiro do Simple Simulator recebido com o material, sem alterações. |
 
 O executável do simulador, o editor, as bibliotecas e os arquivos gerados pela montagem não fazem parte desta entrega.
@@ -100,6 +100,8 @@ A onda começa carregada e consome os seis segmentos da barra. A energia volta c
 As posições da tela são calculadas por `linha * 40 + coluna`. O início de `JOGO.ASM` guarda os textos, as variáveis e as tabelas das fases. Depois vêm os menus e o laço principal da partida. As rotinas seguintes cuidam do movimento, dos tiros, das colisões, da onda de choque, da pontuação, dos bônus e do chefe.
 
 Os inimigos usam vetores de até oito posições; os tiros do jogador têm 32 espaços. O chefe usa o primeiro espaço de inimigo e possui uma rotina própria de movimento. A leitura do teclado ocorre entre as atualizações dos quadros, e a pausa não avança os temporizadores.
+
+Cada desenho do charmap usa blocos de 8 × 8 pixels. Os códigos de 1 a 25 guardam os desenhos do jogo, e as letras e os números continuam disponíveis para o placar e os menus. A nave e os drones juntam três blocos na horizontal. O chefe junta sete. O Assembly envia o código do bloco e a cor pela instrução `OUTCHAR`.
 
 ## Verificação e referência do simulador
 

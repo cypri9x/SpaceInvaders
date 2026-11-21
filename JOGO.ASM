@@ -104,7 +104,6 @@ jogo_nome: string "ICMC INVADERS"
 jogo_objetivo: string "CUMPRA A META. VOCE TEM 3 VIDAS."
 intro_naves: string "NAVES NA TELA:"
 intro_meta: string "META:"
-jogo_quantidade: string "NAVES:"
 jogo_controles: string "A/D: DESLIZAR  X: FREAR  S: FASES"
 jogo_armas: string "ESPACO: TIRO  U: ONDA  P: PAUSA"
 jogo_ritmo: string "1: CALMO   2: NORMAL"
@@ -116,7 +115,6 @@ jogo_final: string "BOA! O ICMC ESTA A SALVO!"
 jogo_derrota: string "AS NAVES PASSARAM! TENTE DE NOVO"
 jogo_repetir: string "ENTER: CONTINUAR   R: REPETIR"
 jogo_voltar: string "S: SELECAO DE FASES"
-fase_label: string "PTS:"
 ultimate_label: string "U:"
 ultimate_pronta: string "PRONTA"
 ultimate_vazia: string "      "
@@ -168,11 +166,11 @@ static fase_dicas + #5, #fase_dica_6
 static fase_dicas + #6, #fase_dica_7
 fase_cores: var #7
 static fase_cores + #0, #512
-static fase_cores + #1, #3072
+static fase_cores + #1, #3584
 static fase_cores + #2, #3328
 static fase_cores + #3, #2304
 static fase_cores + #4, #2816
-static fase_cores + #5, #1280
+static fase_cores + #5, #2560
 static fase_cores + #6, #2304
 fase_passos: var #7
 static fase_passos + #0, #2
@@ -274,7 +272,26 @@ linha_hud_vazia: string "                                  "
 hud_recorde: string "RECORDE:"
 hud_bonus: string "D: DUPLO  E: ESCUDO  U: ENERGIA"
 ritmo_curto: string "1/2: RITMO"
-chefe_sprite: string "<=[W]=>"
+; Sequencias de codigos do charmap. Zero encerra a rotina imprime_str.
+nave_sprite: var #4
+static nave_sprite + #0, #1
+static nave_sprite + #1, #2
+static nave_sprite + #2, #3
+static nave_sprite + #3, #0
+drone_sprite: var #4
+static drone_sprite + #0, #4
+static drone_sprite + #1, #5
+static drone_sprite + #2, #6
+static drone_sprite + #3, #0
+chefe_sprite: var #8
+static chefe_sprite + #0, #7
+static chefe_sprite + #1, #8
+static chefe_sprite + #2, #9
+static chefe_sprite + #3, #10
+static chefe_sprite + #4, #11
+static chefe_sprite + #5, #12
+static chefe_sprite + #6, #13
+static chefe_sprite + #7, #0
 chefe_vazio: string "       "
 
 
@@ -584,7 +601,7 @@ jogo_comeca:
     call extras_inicia
     call limpa_tela
     call desenha_moldura
-    loadn r0, #7
+    loadn r0, #12
     load r1, fase_atual
     dec r1
     loadn r2, #niveis_lista
@@ -599,20 +616,9 @@ jogo_comeca:
     loadn r0, #1124
     loadn r1, #jogo_armas
     call imprime_str
-    loadn r0, #124
-    loadn r1, #fase_label
-    call imprime_str
     loadn r0, #140
     loadn r1, #ultimate_label
     call imprime_str
-    loadn r0, #84
-    loadn r1, #jogo_quantidade
-    call imprime_str
-    load r0, quantidade_inimigos
-    loadn r1, #'0'
-    add r0, r0, r1
-    loadn r1, #91
-    outchar r0, r1
     loadn r0, #108
     loadn r1, #ritmo_curto
     call imprime_str
@@ -959,8 +965,8 @@ onda_pinta:
     loadn r3, #0
     cmp r1, r3
     jeq onda_cores_apagar
-    loadn r1, #3370 ; * rosa
-    loadn r3, #3645 ; = aqua
+    loadn r1, #3352 ; onda rosa
+    loadn r3, #3609 ; pulso aqua
     jmp onda_cores_prontas
 onda_cores_apagar:
     loadn r1, #' '
@@ -1023,7 +1029,7 @@ onda_dano_loop:
     jle onda_dano_proximo
     cmp r0, r3
     jgr onda_dano_proximo
-    call apaga_sprite
+    call apaga_alvo
     loadn r0, #1
     storei r6, r0
     load r0, acertos
@@ -1161,9 +1167,8 @@ ultimate_status:
     rts
 
 ; A nave e os inimigos comuns ocupam tres caracteres, com a posicao no centro.
-; O chefe ocupa sete. apaga_chefe_extra limpa tambem as pontas maiores.
+; O chefe ocupa sete e tem uma rotina de limpeza propria.
 apaga_sprite:
-    call apaga_chefe_extra
     push r0
     push r1
     dec r0
@@ -1179,16 +1184,13 @@ apaga_sprite:
 desenha_nave:
     push r0
     push r1
+    push r2
     load r0, nave_pos
     dec r0
-    loadn r1, #3631 ; / em aqua
-    outchar r1, r0
-    inc r0
-    loadn r1, #3678 ; ^ em aqua
-    outchar r1, r0
-    inc r0
-    loadn r1, #3676 ; barra invertida em aqua
-    outchar r1, r0
+    loadn r1, #nave_sprite
+    loadn r2, #3584
+    call imprime_str
+    pop r2
     pop r1
     pop r0
     rts
@@ -1205,18 +1207,9 @@ desenha_alvo:
     push r1
     push r2
     dec r0
-    loadn r1, #60
+    loadn r1, #drone_sprite
     load r2, cor_inimigo
-    add r1, r1, r2
-    outchar r1, r0
-    inc r0
-    loadn r1, #86
-    add r1, r1, r2
-    outchar r1, r0
-    inc r0
-    loadn r1, #62
-    add r1, r1, r2
-    outchar r1, r0
+    call imprime_str
     pop r2
     pop r1
     pop r0
@@ -1233,10 +1226,10 @@ desenha_tiro:
     loadn r1, #0
     cmp r2, r1
     jeq desenha_tiro_normal
-    loadn r1, #3370 ; faisca * rosa
+    loadn r1, #3347 ; faisca do charmap
     jmp desenha_tiro_imprime
 desenha_tiro_normal:
-    loadn r1, #2940 ; tiro | amarelo
+    loadn r1, #2830 ; laser do charmap
 desenha_tiro_imprime:
     outchar r1, r0
     pop r2
@@ -1522,7 +1515,7 @@ acerto_atingiu:
     loadn r0, #0
     storei r7, r0
     loadi r0, r5
-    call apaga_sprite
+    call apaga_alvo
     load r0, acertos
     inc r0
     store acertos, r0
@@ -2049,12 +2042,12 @@ nave_direita_salva:
     store nave_direita_x, r0
     loadn r1, #320
     add r1, r1, r0
-    loadn r2, #'='
-    loadn r3, #3072
+    loadn r2, #20
+    loadn r3, #3584
     add r2, r2, r3
     outchar r2, r1
     inc r1
-    loadn r2, #'>'
+    loadn r2, #21
     add r2, r2, r3
     outchar r2, r1
 
@@ -2078,12 +2071,12 @@ nave_esquerda_salva:
     store nave_esquerda_x, r0
     loadn r1, #800
     add r1, r1, r0
-    loadn r2, #'<'
+    loadn r2, #22
     loadn r3, #3328
     add r2, r2, r3
     outchar r2, r1
     inc r1
-    loadn r2, #'='
+    loadn r2, #23
     add r2, r2, r3
     outchar r2, r1
 
@@ -2525,13 +2518,13 @@ bonus_desenha:
     loadn r2, #2
     cmp r1, r2
     jeq bonus_letra_escudo
-    loadn r1, #597 ; U verde
+    loadn r1, #530 ; bonus de energia
     jmp bonus_imprime
 bonus_letra_duplo:
-    loadn r1, #2884 ; D amarelo
+    loadn r1, #2832 ; bonus de tiro duplo
     jmp bonus_imprime
 bonus_letra_escudo:
-    loadn r1, #3653 ; E aqua
+    loadn r1, #3601 ; bonus de escudo
 bonus_imprime:
     outchar r1, r0
 bonus_fim:
@@ -2544,12 +2537,12 @@ extras_placar:
     push r1
     push r2
     push r3
-    loadn r0, #124
+    loadn r0, #84
     loadn r1, #hud_pontos
     loadn r2, #2816
     call imprime_str
     load r0, pontos
-    loadn r1, #129
+    loadn r1, #89
     call imprime_cinco
     ; HUD fica nas quatro primeiras linhas, nunca na arena.
     loadn r0, #74
@@ -2561,8 +2554,7 @@ extras_placar:
     loadn r1, #75
     outchar r0, r1
     loadn r1, #hud_duplo
-    ; Posicao apos os cinco digitos: coluna 15.
-    loadn r0, #135
+    loadn r0, #98
     call imprime_str
     load r0, duplo_tempo
     loadn r1, #0
@@ -2572,17 +2564,17 @@ extras_placar:
 hud_duplo_zero:
     loadn r1, #'0'
     add r0, r0, r1
-    loadn r1, #137
+    loadn r1, #100
     outchar r0, r1
-    loadn r0, #94
+    loadn r0, #103
     loadn r1, #hud_escudo
     call imprime_str
     load r0, escudo
     loadn r1, #'0'
     add r0, r0, r1
-    loadn r1, #96
+    loadn r1, #105
     outchar r0, r1
-    loadn r0, #100
+    loadn r0, #124
     loadn r1, #hud_onda
     load r3, modo_infinito
     loadn r2, #0
@@ -2598,7 +2590,7 @@ hud_modo_onda:
     jne hud_modo_numero
     load r0, fase_atual
 hud_modo_numero:
-    loadn r1, #105
+    loadn r1, #129
     call imprime_numero
     pop r3
     pop r2
@@ -2681,20 +2673,26 @@ colisao_chefe_esquerda:
 colisao_chefe_fim:
     rts
 
-apaga_chefe_extra:
-    push r0
+apaga_alvo:
     push r1
     push r2
     load r1, fase_atual
     loadn r2, #7
     cmp r1, r2
-    jne apaga_chefe_fim
+    pop r2
+    pop r1
+    jeq apaga_chefe
+    jmp apaga_sprite
+
+apaga_chefe:
+    push r0
+    push r1
+    push r2
     loadn r2, #3
     sub r0, r0, r2
     loadn r1, #chefe_vazio
     loadn r2, #0
     call imprime_str
-apaga_chefe_fim:
     pop r2
     pop r1
     pop r0
@@ -2731,7 +2729,7 @@ chefe_atualiza:
     loadn r0, #0
     store alvo_tempo, r0
     load r0, alvos
-    call apaga_sprite
+    call apaga_chefe
     load r1, direcoes
     loadn r2, #0
     cmp r1, r2
@@ -2822,7 +2820,7 @@ chefe_tiro_remove:
     call desenha_nave
     rts
 chefe_tiro_desenha:
-    loadn r1, #2422 ; v vermelho
+    loadn r1, #2319 ; projetil do chefe
     outchar r1, r0
 chefe_tiro_fim:
     rts
