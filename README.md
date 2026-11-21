@@ -72,14 +72,16 @@ A nave dá um passo no primeiro toque e ao inverter a direção. A campanha abre
 | Fase | Padrão | Meta |
 | --- | --- | --- |
 | Linha | Três inimigos em patrulha horizontal. | 9 acertos |
-| Chuva | Quatro inimigos em queda vertical. | 12 acertos |
-| Zigue-zague | Cinco inimigos com passos horizontais duplos. | 15 acertos |
-| Caçadoras | Seis inimigos que seguem a coluna da nave. | 18 acertos |
-| Em V | Sete inimigos que se movem juntos e descem ao virar. | 21 acertos |
-| Mergulho | Oito inimigos que avançam na direção do jogador. | 40 acertos |
+| Arco | Quatro drones com as pontas abaixo do centro. | 12 acertos |
+| Escada | Cinco drones em diagonal. | 15 acertos |
+| Patrulha | Seis drones em duas fileiras de três. | 18 acertos |
+| Em V | Sete drones em uma formação em V com reforços atrás. | 21 acertos |
+| Esquadra | Oito drones em duas fileiras de quatro. | 40 acertos |
 | Chefão | Nave maior que patrulha o topo e dispara para baixo. | 20 pontos de dano |
 
-Cada fase da campanha começa com três vidas. Os inimigos se revezam para disparar. Uma luz amarela indica quem vai atirar, e o laser vermelho desce na coluna de onde saiu. Você perde uma vida se o laser atingir a nave ou se um inimigo atravessar a arena. A pontuação continua ao avançar de fase.
+Nas seis primeiras fases, os drones cruzam a arena juntos. Ao atingir uma lateral, eles descem uma linha e invertem a direção. Se a frota alcançar a base, ela volta ao topo e causa um único dano.
+
+Cada fase da campanha começa com três vidas. Os inimigos se revezam para disparar. Uma luz amarela indica quem vai atirar, e o laser vermelho desce na coluna de onde saiu. A pontuação continua ao avançar de fase.
 
 No modo infinito, as seis formações comuns se repetem, sem o chefe. A próxima onda começa automaticamente, conservando vidas e pontos. A velocidade aumenta até a onda 16; o indicador de onda para em 99. Escolher 1 ou 2 altera manualmente o ritmo da onda atual.
 
@@ -107,6 +109,6 @@ Cada desenho do charmap usa blocos de 8 × 8 pixels. Os códigos de 1 a 28 guard
 
 ## Verificação e referência do simulador
 
-Na preparação da entrega, o jogo foi montado com o montador original e passou em 23 testes locais que executam as instruções do arquivo compilado. Eles verificam, entre outros casos, colisões, limites da tela, bônus, pausa, avanço das fases e o aviso e trajeto do laser inimigo. O ritmo em tempo real depende do simulador gráfico.
+O jogo foi montado com o montador original e passou em 24 testes locais que executam as instruções do arquivo compilado. Eles verificam, entre outros casos, colisões, limites da tela, bônus, pausa, descida da frota e o trajeto do laser inimigo. O ritmo em tempo real depende do simulador gráfico.
 
 O processador e as ferramentas da disciplina são do projeto [Processador-ICMC, de Eduardo Valle Simões](https://github.com/simoesusp/Processador-ICMC). O arquivo C acompanha a adaptação para Windows que já estava no material local. Os comentários e a identificação existentes nesse fonte foram preservados.

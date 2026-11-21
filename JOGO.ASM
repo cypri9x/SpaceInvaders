@@ -122,18 +122,16 @@ quantidade_inimigos: var #1 ; limita os loops para nao percorrer slots inativos
 meta_acertos: var #1 ; no chefe, corresponde aos seus 20 pontos de vida
 nivel_selecao: var #1
 passo_inimigo: var #1
-passo_descida: var #1
 cor_inimigo: var #1
 grupo_coluna: var #1
 grupo_direcao: var #1
-grupo_delta: var #1 ; fase em V: 1 = passo a direita, 2 = passo a esquerda
+grupo_delta: var #1 ; 1 = direita, 2 = esquerda
 grupo_virou: var #1 ; a formacao desce quando este valor e 1
 acertos: var #1 ; progresso da fase; separado da pontuacao acumulada
 vidas: var #1
 relogio: var #1 ; conta passagens pelo laco, sem bloquear a leitura do teclado
 intervalo: var #1 ; quantidade de passagens antes de atualizar um quadro
 alvo_tempo: var #1
-descida_tempo: var #1
 recarga: var #1 ; quadros restantes ate poder disparar outra vez
 proxima_coluna: var #1
 resultado: var #1 ; 0 = jogando, 1 = venceu, 2 = perdeu
@@ -166,11 +164,11 @@ static explosao_direcoes + #3, #7
 niveis_titulo: string "SELECIONE A FASE"
 niveis_ajuda: string "W/S: MOVER  ENTER: JOGAR  A: MENU"
 nivel_1: string "LINHA (3 NAVES)"
-nivel_2: string "CHUVA (4 NAVES)"
-nivel_3: string "ZIGUE-ZAGUE (5 NAVES)"
-nivel_4: string "CACADORAS (6 NAVES)"
+nivel_2: string "ARCO (4 NAVES)"
+nivel_3: string "ESCADA (5 NAVES)"
+nivel_4: string "PATRULHA (6 NAVES)"
 nivel_5: string "EM V (7 NAVES)"
-nivel_6: string "MERGULHO (8 NAVES)"
+nivel_6: string "ESQUADRA (8 NAVES)"
 nivel_7: string "CHEFAO (20 ACERTOS)"
 niveis_lista: var #7
 static niveis_lista + #0, #nivel_1
@@ -182,16 +180,13 @@ static niveis_lista + #5, #nivel_6
 static niveis_lista + #6, #nivel_7
 
 
-; Dados pequenos definem a aparencia e o ritmo de cada padrao.
-; passo_inimigo e medido em quadros; passo_descida conta movimentos do inimigo.
-; O valor 65535 deixa a descida normal desativada na pratica para a fase em V.
-; Ela desce pelo sinal grupo_virou; o chefe tem sua propria atualizacao.
-fase_dica_1: string "FORMACAO EM LINHA. MIRE COM CALMA."
-fase_dica_2: string "CHUVA: NAVES CAEM EM LINHA RETA."
-fase_dica_3: string "ZIGUE-ZAGUE: DUAS CASAS POR PASSO."
-fase_dica_4: string "CACADORAS TE SEGUEM. X PARA MIRAR."
-fase_dica_5: string "FORMACAO EM V. VIRAR FAZ DESCER."
-fase_dica_6: string "MERGULHOS DIAGONAIS NA SUA DIRECAO."
+; Cores, formas iniciais e intervalo em quadros de cada frota.
+fase_dica_1: string "ATIRE NOS DRONES EM LINHA."
+fase_dica_2: string "A FROTA DESCE QUANDO MUDA DE LADO."
+fase_dica_3: string "USE OS ESPACOS PARA DESVIAR."
+fase_dica_4: string "FREIE COM X PARA MIRAR NA FROTA."
+fase_dica_5: string "A FORMACAO EM V AVANCA JUNTA."
+fase_dica_6: string "MIRE NOS ESPACOS ENTRE OS LASERS."
 fase_dica_7: string "DESVIE DOS TIROS. U ATINGE O CHEFE."
 fase_dicas: var #7
 static fase_dicas + #0, #fase_dica_1
@@ -210,21 +205,13 @@ static fase_cores + #4, #2816
 static fase_cores + #5, #2560
 static fase_cores + #6, #2304
 fase_passos: var #7
-static fase_passos + #0, #2
-static fase_passos + #1, #5
-static fase_passos + #2, #2
-static fase_passos + #3, #3
-static fase_passos + #4, #1
-static fase_passos + #5, #3
+static fase_passos + #0, #7
+static fase_passos + #1, #6
+static fase_passos + #2, #6
+static fase_passos + #3, #6
+static fase_passos + #4, #5
+static fase_passos + #5, #4
 static fase_passos + #6, #2
-fase_descidas: var #7
-static fase_descidas + #0, #10
-static fase_descidas + #1, #1
-static fase_descidas + #2, #8
-static fase_descidas + #3, #8
-static fase_descidas + #4, #65535
-static fase_descidas + #5, #1
-static fase_descidas + #6, #65535
 ; Cada fase ocupa oito entradas, mesmo quando usa menos de oito inimigos.
 ; Para achar a posicao inicial: (fase_atual - 1) * 8 + indice do inimigo.
 fase_formacoes: var #56
@@ -236,46 +223,46 @@ static fase_formacoes + #4, #0
 static fase_formacoes + #5, #0
 static fase_formacoes + #6, #0
 static fase_formacoes + #7, #0
-static fase_formacoes + #8, #166
-static fase_formacoes + #9, #255
-static fase_formacoes + #10, #344
-static fase_formacoes + #11, #433
+static fase_formacoes + #8, #290
+static fase_formacoes + #9, #216
+static fase_formacoes + #10, #224
+static fase_formacoes + #11, #310
 static fase_formacoes + #12, #0
 static fase_formacoes + #13, #0
 static fase_formacoes + #14, #0
 static fase_formacoes + #15, #0
-static fase_formacoes + #16, #167
-static fase_formacoes + #17, #253
-static fase_formacoes + #18, #340
-static fase_formacoes + #19, #427
-static fase_formacoes + #20, #513
+static fase_formacoes + #16, #210
+static fase_formacoes + #17, #255
+static fase_formacoes + #18, #300
+static fase_formacoes + #19, #345
+static fase_formacoes + #20, #390
 static fase_formacoes + #21, #0
 static fase_formacoes + #22, #0
 static fase_formacoes + #23, #0
-static fase_formacoes + #24, #166
-static fase_formacoes + #25, #273
-static fase_formacoes + #26, #326
-static fase_formacoes + #27, #433
-static fase_formacoes + #28, #486
-static fase_formacoes + #29, #593
+static fase_formacoes + #24, #210
+static fase_formacoes + #25, #220
+static fase_formacoes + #26, #230
+static fase_formacoes + #27, #330
+static fase_formacoes + #28, #340
+static fase_formacoes + #29, #350
 static fase_formacoes + #30, #0
 static fase_formacoes + #31, #0
-static fase_formacoes + #32, #168
-static fase_formacoes + #33, #192
-static fase_formacoes + #34, #252
-static fase_formacoes + #35, #268
-static fase_formacoes + #36, #336
-static fase_formacoes + #37, #344
-static fase_formacoes + #38, #420
+static fase_formacoes + #32, #210
+static fase_formacoes + #33, #255
+static fase_formacoes + #34, #300
+static fase_formacoes + #35, #265
+static fase_formacoes + #36, #230
+static fase_formacoes + #37, #335
+static fase_formacoes + #38, #345
 static fase_formacoes + #39, #0
-static fase_formacoes + #40, #165
-static fase_formacoes + #41, #210
-static fase_formacoes + #42, #255
-static fase_formacoes + #43, #300
-static fase_formacoes + #44, #345
-static fase_formacoes + #45, #390
-static fase_formacoes + #46, #435
-static fase_formacoes + #47, #460
+static fase_formacoes + #40, #210
+static fase_formacoes + #41, #216
+static fase_formacoes + #42, #224
+static fase_formacoes + #43, #230
+static fase_formacoes + #44, #330
+static fase_formacoes + #45, #336
+static fase_formacoes + #46, #344
+static fase_formacoes + #47, #350
 static fase_formacoes + #48, #300
 
 
@@ -669,7 +656,6 @@ jogo_comeca:
     store acertos, r0
     store relogio, r0
     store alvo_tempo, r0
-    store descida_tempo, r0
     store recarga, r0
     store resultado, r0
     store vitoria_tempo, r0
@@ -707,10 +693,6 @@ jogo_limpa_tiros:
     add r1, r1, r0
     loadi r1, r1
     store passo_inimigo, r1
-    loadn r1, #fase_descidas
-    add r1, r1, r0
-    loadi r1, r1
-    store passo_descida, r1
     loadn r1, #fase_cores
     add r1, r1, r0
     loadi r1, r1
@@ -1334,7 +1316,7 @@ imprime_numero:
     pop r0
     rts
 ; Nas fases comuns a meta e tres vezes a quantidade de inimigos.
-; Mergulho usa 40 acertos e o chefe usa um inimigo com 20 pontos de dano.
+; Esquadra usa 40 acertos e o chefe usa um inimigo com 20 pontos de dano.
 fase_configura:
     load r0, fase_atual
     loadn r1, #7
@@ -1372,9 +1354,9 @@ novo_alvo:
     add r0, r0, r1
     loadi r0, r0
     load r1, fase_atual
-    loadn r2, #5
+    loadn r2, #7
     cmp r1, r2
-    jne novo_alvo_grava
+    jeq novo_alvo_grava
     load r1, grupo_coluna
     add r0, r0, r1
     loadn r1, #20
@@ -1619,8 +1601,7 @@ acerto_fim:
     pop r4
     rts
 
-; Cada padrao tem seu proprio passo. A fase define se o inimigo anda reto,
-; persegue a coluna da nave, faz zigue-zague ou acompanha o grupo em V.
+; Os drones andam juntos. A frota so desce quando chega na lateral.
 atualiza_alvos:
     load r0, fase_atual
     loadn r1, #7
@@ -1638,98 +1619,34 @@ atualiza_alvos:
     jne alvos_fim
     loadn r0, #0
     store alvo_tempo, r0
-    load r0, descida_tempo
-    inc r0
-    store descida_tempo, r0
-    load r1, passo_descida
-    cmp r0, r1
-    jne alvos_prepara
-    loadn r0, #0
-    store descida_tempo, r0
-alvos_prepara:
     call grupo_atualiza
     loadn r4, #0
     loadn r5, #alvos
 alvos_loop:
     loadi r0, r5
     call apaga_sprite
-    load r1, fase_atual
-    loadn r2, #2
-    cmp r1, r2
-    jeq alvo_desce
-    loadn r2, #4
-    cmp r1, r2
-    jeq alvo_persegue
-    loadn r2, #6
-    cmp r1, r2
-    jeq alvo_persegue
-    loadn r2, #5
-    cmp r1, r2
-    jeq alvo_formacao
-    call alvo_horizontal
-    load r1, fase_atual
-    loadn r2, #3
-    cmp r1, r2
-    jne alvo_desce
-    call alvo_horizontal
-    jmp alvo_desce
-alvo_persegue:
-    loadn r1, #40
-    mod r2, r0, r1
-    load r3, nave_pos
-    mod r3, r3, r1
-    cmp r2, r3
-    jeq alvo_desce
-    jgr alvo_persegue_esquerda
-    inc r0
-    jmp alvo_desce
-alvo_persegue_esquerda:
-    dec r0
-    jmp alvo_desce
-alvo_formacao:
-    load r1, grupo_delta
-    loadn r2, #1
-    cmp r1, r2
-    jeq alvo_formacao_direita
-    dec r0
-    jmp alvo_desce
-alvo_formacao_direita:
-    inc r0
-alvo_desce:
-    load r1, fase_atual
-    loadn r2, #5
-    cmp r1, r2
-    jne alvo_descida_normal
+    ; Nas bordas, gasta o passo apenas descendo e vira para o proximo.
     load r1, grupo_virou
     loadn r2, #0
     cmp r1, r2
-    jeq alvo_salva
-    jmp alvo_descida_aplica
-alvo_descida_normal:
-    load r1, descida_tempo
-    loadn r2, #0
+    jne alvo_desce
+    load r1, grupo_delta
+    loadn r2, #1
     cmp r1, r2
-    jne alvo_salva
-alvo_descida_aplica:
+    jeq alvo_direita
+    dec r0
+    jmp alvo_grava
+alvo_direita:
+    inc r0
+    jmp alvo_grava
+alvo_desce:
     loadn r1, #40
     add r0, r0, r1
-; Passar da linha 25 conta como invasao: perde vida ou consome o escudo.
-; Se ainda houver vidas, reposiciona somente o inimigo que escapou.
-alvo_salva:
-    storei r5, r0
+alvo_grava:
     loadn r1, #1040
     cmp r0, r1
-    jle alvo_proximo
-    call recebe_dano
-    load r0, vidas
-    loadn r1, #0
-    cmp r0, r1
-    jne alvo_repor
-    loadn r0, #2
-    store resultado, r0
-    jmp alvos_fim
-alvo_repor:
-    call novo_alvo
+    jgr frota_chegou
+    storei r5, r0
 alvo_proximo:
     inc r5
     inc r4
@@ -1758,12 +1675,38 @@ alvos_desenha:
     jne alvos_desenha
 alvos_fim:
     rts
-; Fase 5: a formacao inteira anda junta e desce ao bater na lateral.
-grupo_atualiza:
-    load r0, fase_atual
-    loadn r1, #5
+frota_chegou:
+    ; Uma chegada custa uma vida ou escudo, mesmo com varios drones na base.
+    call recebe_dano
+    load r0, vidas
+    loadn r1, #0
     cmp r0, r1
-    jne grupo_fim
+    jne frota_reinicia
+    loadn r0, #2
+    store resultado, r0
+    rts
+frota_reinicia:
+    loadn r0, #20
+    store grupo_coluna, r0
+    loadn r0, #1
+    store grupo_direcao, r0
+    store grupo_delta, r0
+    loadn r4, #0
+    loadn r5, #alvos
+frota_reinicia_loop:
+    loadi r0, r5
+    call apaga_sprite
+    call novo_alvo
+    inc r4
+    inc r5
+    load r0, quantidade_inimigos
+    cmp r4, r0
+    jne frota_reinicia_loop
+    rts
+
+; As formacoes ocupam as colunas 10 a 30 no inicio. A referencia 20
+; pode variar de 12 a 27, mantendo os centros entre as colunas 2 e 37.
+grupo_atualiza:
     loadn r0, #0
     store grupo_virou, r0
     load r0, grupo_coluna
@@ -1771,71 +1714,34 @@ grupo_atualiza:
     loadn r2, #0
     cmp r1, r2
     jeq grupo_esquerda
-    loadn r1, #25
+    loadn r1, #27
     cmp r0, r1
     jne grupo_direita_passo
     loadn r1, #0
     store grupo_direcao, r1
-    loadn r1, #1
-    store grupo_virou, r1
-    jmp grupo_esquerda_passo
+    jmp grupo_marca_descida
 grupo_direita_passo:
     inc r0
     loadn r1, #1
     jmp grupo_salva
 grupo_esquerda:
-    loadn r1, #14
+    loadn r1, #12
     cmp r0, r1
     jne grupo_esquerda_passo
     loadn r1, #1
     store grupo_direcao, r1
+grupo_marca_descida:
+    loadn r1, #1
     store grupo_virou, r1
-    jmp grupo_direita_passo
+    rts
 grupo_esquerda_passo:
     dec r0
     loadn r1, #2
 grupo_salva:
     store grupo_coluna, r0
     store grupo_delta, r1
-grupo_fim:
-    rts
-; Usa o centro entre as colunas 2 e 37, deixando as pontas dentro da moldura.
-; Ao chegar a uma borda, inverte a direcao e ja da o primeiro passo de volta.
-alvo_horizontal:
-    loadn r1, #direcoes
-    add r1, r1, r4
-    loadi r2, r1
-    loadn r3, #0
-    cmp r2, r3
-    jeq alvo_esquerda
-    loadn r3, #40
-    mod r2, r0, r3
-    loadn r3, #37
-    cmp r2, r3
-    jeq alvo_vira_esquerda
-    inc r0
-    jmp horizontal_fim
-alvo_vira_esquerda:
-    loadn r2, #0
-    storei r1, r2
-    dec r0
-    jmp horizontal_fim
-alvo_esquerda:
-    loadn r3, #40
-    mod r2, r0, r3
-    loadn r3, #2
-    cmp r2, r3
-    jeq alvo_vira_direita
-    dec r0
-    jmp horizontal_fim
-alvo_vira_direita:
-    loadn r2, #1
-    storei r1, r2
-    inc r0
-horizontal_fim:
     rts
 
-; No infinito nao abre a tela de vitoria: segue direto para a proxima onda.
 jogo_ganhou:
     load r0, modo_infinito
     loadn r1, #1
@@ -2312,7 +2218,7 @@ grava_ritmo:
     loadn r3, #4
     cmp r2, r3
     jne grava_deslize
-    ; Na fase das cacadoras, segurar a mira na mesma coluna ajuda.
+    ; Na fase Patrulha, segurar a mira na mesma coluna ajuda.
     mov r1, r0
 grava_deslize:
     add r0, r0, r1
