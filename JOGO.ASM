@@ -68,7 +68,7 @@ nave_esquerda_x:  var #1
 ; Seis formacoes (3..8 inimigos) e um chefe; ultimate em onda de choque.
 nave_pos: var #1 ; posicao do centro da nave, na linha 26
 ; Estes tres vetores ficam juntos: a inicializacao limpa 24 posicoes.
-alvos: var #8 ; centro de cada inimigo; o chefe usa apenas o indice 0
+alvos: var #8 ; centro de cada inimigo; os chefes usam os indices 0 e 1
 direcoes: var #8 ; 0 = esquerda, 1 = direita
 explosao_protecao: var #8 ; protege inimigos que acabaram de reaparecer
 ; A inicializacao dos tiros tambem depende destes dois vetores juntos.
@@ -304,6 +304,8 @@ static estrelas_pos + #29, #983
 static estrelas_pos + #30, #1006
 static estrelas_pos + #31, #1024
 energia: var #1 ; carga da onda: de 0 a 6 segmentos
+energia_acertos: var #1 ; progresso para o proximo segmento
+chefes_vida: var #2 ; 18 pontos para cada nave da ultima fase
 vitoria_tempo: var #1
 onda_linha: var #1 ; primeira linha do efeito; zero significa que nao esta ativo
 onda_atingidos: var #8 ; impede contar o mesmo slot duas vezes na mesma onda
@@ -356,7 +358,7 @@ nivel_3: string "ESCADA (5 NAVES)"
 nivel_4: string "PATRULHA (6 NAVES)"
 nivel_5: string "EM V (7 NAVES)"
 nivel_6: string "ESQUADRA (8 NAVES)"
-nivel_7: string "CHEFAO (20 ACERTOS)"
+nivel_7: string "CHEFAO DUPLO (36 ACERTOS)"
 niveis_lista: var #7
 static niveis_lista + #0, #nivel_1
 static niveis_lista + #1, #nivel_2
@@ -435,7 +437,8 @@ static fase_formacoes + #44, #330
 static fase_formacoes + #45, #336
 static fase_formacoes + #46, #344
 static fase_formacoes + #47, #350
-static fase_formacoes + #48, #300
+static fase_formacoes + #48, #294
+static fase_formacoes + #49, #426
 
 
 ; Estado arcade. O recorde dura enquanto o simulador estiver aberto.
@@ -813,9 +816,6 @@ jogo_limpa_tiros:
     loadn r3, #0
     cmp r2, r3
     jne jogo_limpa_tiros
-    loadn r0, #6
-    store energia, r0
-    loadn r0, #0
     call ultimate_placar
     load r0, fase_atual
     dec r0
@@ -1104,6 +1104,7 @@ nave_ultimate:
     jne jogo_tempo
     loadn r0, #0
     store energia, r0
+    store energia_acertos, r0
     loadn r1, #onda_atingidos
     loadn r2, #8
 ; Libera as marcas da onda anterior. Reaparecer nao libera a marca da atual.
@@ -1298,7 +1299,7 @@ onda_redesenha_proximo:
     call desenha_nave
     rts
 
-; Seis segmentos. Cada acerto de tiro normal carrega um segmento.
+; Seis segmentos. Cada dois acertos de tiro normal carregam um segmento.
 ultimate_placar:
     push r0
     push r1
@@ -1480,15 +1481,15 @@ imprime_numero:
     pop r0
     rts
 ; Nas fases comuns a meta e tres vezes a quantidade de inimigos.
-; Esquadra usa 40 acertos e o chefe usa um inimigo com 20 pontos de dano.
+; Esquadra usa 40 acertos. Os dois chefes tem 18 pontos de vida cada.
 fase_configura:
     load r0, fase_atual
     loadn r1, #7
     cmp r0, r1
     jne fase_configura_normal
-    loadn r0, #1
+    loadn r0, #2
     store quantidade_inimigos, r0
-    loadn r0, #20
+    loadn r0, #36
     store meta_acertos, r0
     rts
 fase_configura_normal:
@@ -1530,6 +1531,15 @@ novo_alvo_grava:
     add r2, r2, r4
     storei r2, r0
     call desenha_alvo
+    load r0, fase_atual
+    loadn r1, #7
+    cmp r0, r1
+    jne novo_alvo_protecao
+    loadn r1, #chefes_vida
+    add r1, r1, r4
+    loadn r0, #18
+    storei r1, r0
+novo_alvo_protecao:
     ; As faiscas nao acertam de novo a mesma nave assim que ela reaparece.
     loadn r1, #explosao_protecao
     add r1, r1, r4
@@ -1738,14 +1748,16 @@ acerto_atingiu:
     loadn r1, #6
     cmp r0, r1
     jeq acerto_energia_pronta
+    load r0, energia_acertos
     inc r0
-    loadn r1, #6
+    store energia_acertos, r0
+    loadn r1, #2
     cmp r0, r1
-    jgr acerto_energia_limite
-    jmp acerto_energia_salva
-acerto_energia_limite:
-    loadn r0, #6
-acerto_energia_salva:
+    jne acerto_energia_pronta
+    loadn r0, #0
+    store energia_acertos, r0
+    load r0, energia
+    inc r0
     store energia, r0
 acerto_energia_pronta:
     call ultimate_placar
@@ -1867,12 +1879,22 @@ frota_avanca:
 frota_avanca_fim:
     rts
 
-; r5 aponta para o drone atingido. O chefe permanece ate sua vida acabar.
+; r5 aponta para o alvo atingido. Cada chefe so some ao perder toda a vida.
 elimina_drone:
     load r0, fase_atual
     loadn r1, #7
     cmp r0, r1
-    jeq elimina_drone_fim
+    jne elimina_alvo
+    ; O indice r4 corresponde a nave atingida, mesmo durante a onda.
+    loadn r1, #chefes_vida
+    add r1, r1, r4
+    loadi r0, r1
+    dec r0
+    storei r1, r0
+    loadn r1, #0
+    cmp r0, r1
+    jne elimina_drone_fim
+elimina_alvo:
     loadn r0, #0
     storei r5, r0
     load r0, alvos_restantes
@@ -2372,6 +2394,8 @@ imprime_str_fim:
 ; Zera a tentativa e prepara tres vidas. O recorde fica fora desta rotina.
 partida_nova:
     loadn r0, #0
+    store energia, r0
+    store energia_acertos, r0
     store pontos, r0
     store modo_infinito, r0
     store bonus_ciclo, r0
@@ -2717,7 +2741,14 @@ bonus_coleta:
     loadn r1, #2
     cmp r0, r1
     jeq bonus_escudo
-    loadn r0, #6
+    load r0, energia
+    loadn r1, #2
+    add r0, r0, r1
+    loadn r1, #6
+    cmp r0, r1
+    jle bonus_salva_energia
+    mov r0, r1
+bonus_salva_energia:
     store energia, r0
     call ultimate_placar
     jmp bonus_remove
@@ -2836,7 +2867,7 @@ resultado_pontos:
     call imprime_cinco
     rts
 
-; Chefe usa o primeiro slot; os vinte acertos sao seus pontos de vida.
+; Os chefes ocupam sete casas e usam a mesma regra de colisao.
 colisao_chefe:
     ; Entrada: r0 = posicao do tiro, r5 = slot do alvo. Saida: r2 = 1 se acertou.
     ; O centro menos 3 e mais 3 corresponde aos sete caracteres do chefe.
@@ -2893,16 +2924,21 @@ desenha_chefe:
     push r2
     loadn r2, #3
     sub r0, r0, r2
-    loadn r1, #chefe_sprite
+    loadn r1, #360
     loadn r2, #2304
+    cmp r0, r1
+    jle chefe_imprime
+    loadn r2, #3328
+chefe_imprime:
+    loadn r1, #chefe_sprite
     call imprime_str
     pop r2
     pop r1
     pop r0
     rts
 
-; O chefe anda a cada dois quadros, sem descer. Limites nas colunas 4 e 35
-; deixam espaco para as tres pontas de cada lado. Depois de mover, testa
+; Os chefes patrulham duas linhas, com direcoes independentes. As colunas 4 e 35
+; deixam espaco para as tres partes de cada lado. Depois de mover, testa
 ; tambem se algum tiro que ja estava na tela ficou sobre ele.
 chefe_atualiza:
     load r0, resultado
@@ -2917,28 +2953,46 @@ chefe_atualiza:
     jne chefe_fim
     loadn r0, #0
     store alvo_tempo, r0
-    load r0, alvos
+    loadn r4, #0
+    loadn r5, #alvos
+chefe_move_loop:
+    loadi r0, r5
+    loadn r1, #0
+    cmp r0, r1
+    jeq chefe_move_proximo
     call apaga_chefe
-    load r1, direcoes
+    loadn r3, #direcoes
+    add r3, r3, r4
+    loadi r1, r3
     loadn r2, #0
     cmp r1, r2
     jeq chefe_esquerda
     inc r0
-    loadn r1, #315
-    cmp r0, r1
+    loadn r1, #40
+    mod r2, r0, r1
+    loadn r1, #35
+    cmp r2, r1
     jne chefe_salva
     loadn r1, #0
-    store direcoes, r1
+    storei r3, r1
     jmp chefe_salva
 chefe_esquerda:
     dec r0
-    loadn r1, #284
-    cmp r0, r1
+    loadn r1, #40
+    mod r2, r0, r1
+    loadn r1, #4
+    cmp r2, r1
     jne chefe_salva
     loadn r1, #1
-    store direcoes, r1
+    storei r3, r1
 chefe_salva:
-    store alvos, r0
+    storei r5, r0
+chefe_move_proximo:
+    inc r4
+    inc r5
+    load r1, quantidade_inimigos
+    cmp r4, r1
+    jne chefe_move_loop
     loadn r7, #tiros
     loadn r6, #0
 chefe_colisoes:
@@ -2948,8 +3002,6 @@ chefe_colisoes:
     loadn r1, #32
     cmp r6, r1
     jne chefe_colisoes
-    load r0, alvos
-    call desenha_chefe
 chefe_fim:
     rts
 

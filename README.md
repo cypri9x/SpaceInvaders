@@ -75,7 +75,7 @@ Cada toque em A/D move uma casa na hora e completa até duas casas após breves 
 | Patrulha | Seis drones em duas fileiras de três. | 18 acertos |
 | Em V | Sete drones em uma formação em V com reforços atrás. | 21 acertos |
 | Esquadra | Oito drones em duas fileiras de quatro. | 40 acertos |
-| Chefão | Nave maior que patrulha o topo e dispara para baixo. | 20 pontos de dano |
+| Chefão duplo | Duas naves patrulham alturas diferentes e se revezam para disparar. | 18 pontos de dano por nave |
 
 Nas seis primeiras fases, os drones cruzam a arena juntos. Às vezes, a frota faz uma pausa curta e inverte a direção no meio da tela. A descida de uma linha só acontece nas laterais. Se a frota alcançar a base, ela volta ao topo e causa um único dano.
 
@@ -95,22 +95,22 @@ A cada quatro acertos pode cair um bônus. Só existe um caindo por vez, e os ti
 
 - **D:** tiro duplo durante 180 quadros.
 - **E:** escudo que absorve um dano de laser ou de inimigo que passou.
-- **U:** recarga completa da onda de choque.
+- **U:** recupera dois segmentos da onda de choque.
 
 Para coletar, encoste com qualquer parte da nave. A cabine fica verde com o escudo ativo. O tiro duplo dispara pelas duas pontas da nave. Os bônus e efeitos temporários são reiniciados ao mudar de fase.
 
-A onda começa carregada e consome os seis segmentos da barra. Cada acerto de tiro normal recupera um segmento e o bônus de energia enche a barra. Contra o chefe, cada onda causa um ponto de dano.
+A onda começa vazia e consome seis segmentos. Dois acertos de tiro normal recuperam um segmento. O bônus de energia recupera dois. Ao continuar para a fase seguinte, a carga acumulada é mantida. A onda causa um ponto de dano a cada nave do chefão.
 
 ## Organização do código
 
 As posições da tela são calculadas por `linha * 40 + coluna`. O início de `JOGO.ASM` guarda os textos, as variáveis e as tabelas das fases. Depois vêm os menus e o laço principal da partida. As rotinas seguintes cuidam do movimento, dos tiros, das colisões, da onda de choque, da pontuação, dos bônus e do chefe.
 
-Os inimigos usam vetores de até oito posições; os tiros do jogador têm 32 espaços. O chefe usa o primeiro espaço de inimigo e possui uma rotina própria de movimento. A leitura do teclado ocorre entre as atualizações dos quadros, e a pausa não avança os temporizadores.
+Os inimigos usam vetores de até oito posições. Os tiros do jogador têm 32 espaços. Os dois chefes usam os primeiros espaços de inimigo e têm vida e direção independentes. A leitura do teclado ocorre entre as atualizações dos quadros, e a pausa não avança os temporizadores.
 
 Cada desenho do charmap usa blocos de 8 × 8 pixels. Os códigos de 1 a 28 guardam os sprites da partida. Os cenários usam 29 a 31, 96 a 123 e 125. O texto do jogo usa letras maiúsculas e números. A nave e os drones juntam três blocos na horizontal. O chefe junta sete. O Assembly envia o código do bloco e a cor pela instrução `OUTCHAR`. O fundo é desenhado antes dos objetos da arena.
 
 ## Verificação e referência do simulador
 
-O jogo foi montado com o montador original e passou em 30 testes locais que executam as instruções do arquivo compilado. Eles verificam o movimento ao segurar, o deslize ao soltar, as colisões, a troca de frotas e a derrota de quem fica parado disparando no centro da primeira fase. O ritmo em tempo real depende do simulador gráfico.
+O jogo foi montado com o montador original e passou em 31 testes locais que executam as instruções do arquivo compilado. Eles verificam o movimento ao segurar, o deslize ao soltar, as colisões, a troca de frotas, a vida independente dos chefes e a recarga da ultimate. O ritmo em tempo real depende do simulador gráfico.
 
 O processador e as ferramentas da disciplina são do projeto [Processador-ICMC, de Eduardo Valle Simões](https://github.com/simoesusp/Processador-ICMC). O arquivo C acompanha a adaptação para Windows que já estava no material local. Os comentários e a identificação existentes nesse fonte foram preservados.
