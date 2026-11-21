@@ -15,7 +15,7 @@
 ; Rotinas que precisam conservar um valor usam push/pop antes de retornar.
 ;
 ; O teclado entrega o codigo ASCII da tecla ou 255 quando nao ha entrada.
-; Ele nao informa que a tecla foi solta. A/D iniciam o deslize e X freia.
+; Ele nao informa que a tecla foi solta. A/D movem uma casa a cada entrada do teclado.
 ; P pausa, espaco atira e U usa a onda quando a barra esta cheia.
 
 ; Pula os dados abaixo e comeca a executar na rotina main.
@@ -45,7 +45,7 @@ msg_inicio:       string "ENTER PARA INICIAR"
 voltar_enter:     string "PRESSIONE ENTER PARA VOLTAR"
 
 titulo_config:    string "CONFIGURACOES"
-config_controle1: string "A/D: DESLIZAR   X: FREAR"
+config_controle1: string "A/D: MOVER UM PASSO"
 config_controle2: string "ESPACO: TIRO   U: ULTIMATE"
 config_mensagem:  string "P: PAUSA  1/2: RITMO  S: FASES"
 
@@ -73,11 +73,198 @@ explosao_protecao: var #8 ; protege inimigos que acabaram de reaparecer
 ; A inicializacao dos tiros tambem depende destes dois vetores juntos.
 tiros: var #32 ; posicao do projetil; zero indica um espaco livre
 tiro_direcoes: var #32 ; 0 = vertical, 1/2 = diagonais para cima, 6/7 = para baixo
-nave_direcao: var #1 ; 0 = parada, 1 = esquerda, 2 = direita
-nave_tempo: var #1 ; contador separado para o deslize
-nave_intervalo: var #1 ; intervalo entre passos depois do primeiro toque
+nave_direcao: var #1 ; direcao do passo pedido pelo teclado
 estrelas_tempo: var #1
 estrelas_fase: var #1
+
+; Cinturao
+cenario_1: var #25
+static cenario_1 + #0, #324
+static cenario_1 + #1, #1053
+static cenario_1 + #2, #325
+static cenario_1 + #3, #1054
+static cenario_1 + #4, #326
+static cenario_1 + #5, #1055
+static cenario_1 + #6, #327
+static cenario_1 + #7, #1120
+static cenario_1 + #8, #544
+static cenario_1 + #9, #1053
+static cenario_1 + #10, #545
+static cenario_1 + #11, #1054
+static cenario_1 + #12, #546
+static cenario_1 + #13, #1055
+static cenario_1 + #14, #547
+static cenario_1 + #15, #1120
+static cenario_1 + #16, #808
+static cenario_1 + #17, #1053
+static cenario_1 + #18, #809
+static cenario_1 + #19, #1054
+static cenario_1 + #20, #810
+static cenario_1 + #21, #1055
+static cenario_1 + #22, #811
+static cenario_1 + #23, #1120
+static cenario_1 + #24, #0
+
+; Gigante anelado
+cenario_2: var #17
+static cenario_2 + #0, #423
+static cenario_2 + #1, #1377
+static cenario_2 + #2, #424
+static cenario_2 + #3, #1378
+static cenario_2 + #4, #425
+static cenario_2 + #5, #1379
+static cenario_2 + #6, #426
+static cenario_2 + #7, #1380
+static cenario_2 + #8, #684
+static cenario_2 + #9, #1377
+static cenario_2 + #10, #685
+static cenario_2 + #11, #1378
+static cenario_2 + #12, #686
+static cenario_2 + #13, #1379
+static cenario_2 + #14, #687
+static cenario_2 + #15, #1380
+static cenario_2 + #16, #0
+
+; Nebulosa
+cenario_3: var #25
+static cenario_3 + #0, #324
+static cenario_3 + #1, #1381
+static cenario_3 + #2, #325
+static cenario_3 + #3, #1382
+static cenario_3 + #4, #326
+static cenario_3 + #5, #1383
+static cenario_3 + #6, #327
+static cenario_3 + #7, #1384
+static cenario_3 + #8, #620
+static cenario_3 + #9, #1381
+static cenario_3 + #10, #621
+static cenario_3 + #11, #1382
+static cenario_3 + #12, #622
+static cenario_3 + #13, #1383
+static cenario_3 + #14, #623
+static cenario_3 + #15, #1384
+static cenario_3 + #16, #848
+static cenario_3 + #17, #1381
+static cenario_3 + #18, #849
+static cenario_3 + #19, #1382
+static cenario_3 + #20, #850
+static cenario_3 + #21, #1383
+static cenario_3 + #22, #851
+static cenario_3 + #23, #1384
+static cenario_3 + #24, #0
+
+; Estacao orbital
+cenario_4: var #17
+static cenario_4 + #0, #404
+static cenario_4 + #1, #1641
+static cenario_4 + #2, #405
+static cenario_4 + #3, #1642
+static cenario_4 + #4, #406
+static cenario_4 + #5, #1643
+static cenario_4 + #6, #407
+static cenario_4 + #7, #1644
+static cenario_4 + #8, #745
+static cenario_4 + #9, #1641
+static cenario_4 + #10, #746
+static cenario_4 + #11, #1642
+static cenario_4 + #12, #747
+static cenario_4 + #13, #1643
+static cenario_4 + #14, #748
+static cenario_4 + #15, #1644
+static cenario_4 + #16, #0
+
+; Cometas
+cenario_5: var #25
+static cenario_5 + #0, #384
+static cenario_5 + #1, #1133
+static cenario_5 + #2, #385
+static cenario_5 + #3, #1134
+static cenario_5 + #4, #386
+static cenario_5 + #5, #1135
+static cenario_5 + #6, #387
+static cenario_5 + #7, #1136
+static cenario_5 + #8, #647
+static cenario_5 + #9, #1133
+static cenario_5 + #10, #648
+static cenario_5 + #11, #1134
+static cenario_5 + #12, #649
+static cenario_5 + #13, #1135
+static cenario_5 + #14, #650
+static cenario_5 + #15, #1136
+static cenario_5 + #16, #826
+static cenario_5 + #17, #1133
+static cenario_5 + #18, #827
+static cenario_5 + #19, #1134
+static cenario_5 + #20, #828
+static cenario_5 + #21, #1135
+static cenario_5 + #22, #829
+static cenario_5 + #23, #1136
+static cenario_5 + #24, #0
+
+; Lua partida
+cenario_6: var #17
+static cenario_6 + #0, #405
+static cenario_6 + #1, #2161
+static cenario_6 + #2, #406
+static cenario_6 + #3, #2162
+static cenario_6 + #4, #407
+static cenario_6 + #5, #2163
+static cenario_6 + #6, #408
+static cenario_6 + #7, #2164
+static cenario_6 + #8, #703
+static cenario_6 + #9, #2161
+static cenario_6 + #10, #704
+static cenario_6 + #11, #2162
+static cenario_6 + #12, #705
+static cenario_6 + #13, #2163
+static cenario_6 + #14, #706
+static cenario_6 + #15, #2164
+static cenario_6 + #16, #0
+
+; Portal
+cenario_7: var #33
+static cenario_7 + #0, #365
+static cenario_7 + #1, #1397
+static cenario_7 + #2, #366
+static cenario_7 + #3, #1398
+static cenario_7 + #4, #367
+static cenario_7 + #5, #1399
+static cenario_7 + #6, #368
+static cenario_7 + #7, #1400
+static cenario_7 + #8, #405
+static cenario_7 + #9, #1401
+static cenario_7 + #10, #406
+static cenario_7 + #11, #1402
+static cenario_7 + #12, #407
+static cenario_7 + #13, #1403
+static cenario_7 + #14, #408
+static cenario_7 + #15, #1405
+static cenario_7 + #16, #704
+static cenario_7 + #17, #1397
+static cenario_7 + #18, #705
+static cenario_7 + #19, #1398
+static cenario_7 + #20, #706
+static cenario_7 + #21, #1399
+static cenario_7 + #22, #707
+static cenario_7 + #23, #1400
+static cenario_7 + #24, #744
+static cenario_7 + #25, #1401
+static cenario_7 + #26, #745
+static cenario_7 + #27, #1402
+static cenario_7 + #28, #746
+static cenario_7 + #29, #1403
+static cenario_7 + #30, #747
+static cenario_7 + #31, #1405
+static cenario_7 + #32, #0
+
+cenarios: var #7
+static cenarios + #0, #cenario_1
+static cenarios + #1, #cenario_2
+static cenarios + #2, #cenario_3
+static cenarios + #3, #cenario_4
+static cenarios + #4, #cenario_5
+static cenarios + #5, #cenario_6
+static cenarios + #6, #cenario_7
 ; As estrelas ficam entre o placar e a nave, longe da moldura.
 estrelas_pos: var #32
 static estrelas_pos + #0, #182
@@ -263,6 +450,18 @@ duplo_tempo: var #1 ; quadros restantes do tiro duplo
 escudo: var #1 ; 0 = sem escudo, 1 = absorve o proximo dano
 tiro_inimigo: var #1 ; um laser hostil de cada vez; zero quando nao existe
 tiro_inimigo_tempo: var #1
+mira_inimiga: var #1 ; coluna travada durante o aviso, de 1 a 38
+tempo_aviso: var #1
+tempo_disparo: var #1
+; Cada fase tem uma espera diferente. O aviso dura seis quadros.
+cadencia_inimiga: var #7
+static cadencia_inimiga + #0, #19
+static cadencia_inimiga + #1, #16
+static cadencia_inimiga + #2, #14
+static cadencia_inimiga + #3, #12
+static cadencia_inimiga + #4, #15
+static cadencia_inimiga + #5, #10
+static cadencia_inimiga + #6, #8
 atirador: var #1 ; indice do inimigo que vai disparar
 aviso_disparo: var #1 ; posicao da luz antes do disparo
 rajada_pos: var #1
@@ -586,7 +785,6 @@ jogo_comeca:
     store vitoria_tempo, r0
     store onda_linha, r0
     store nave_direcao, r0
-    store nave_tempo, r0
     store estrelas_tempo, r0
     store estrelas_fase, r0
     loadn r1, #alvos
@@ -644,7 +842,7 @@ jogo_limpa_tiros:
     store nave_pos, r0
     loadn r0, #8
     store proxima_coluna, r0
-    call desenha_estrelas
+    call desenha_fundo
     loadn r4, #0
 jogo_cria_inimigos:
     call novo_alvo
@@ -689,12 +887,6 @@ jogo_loop:
     loadn r1, #' '
     cmp r0, r1
     jeq nave_atira
-    loadn r1, #'x'
-    cmp r0, r1
-    jeq nave_freia
-    loadn r1, #'X'
-    cmp r0, r1
-    jeq nave_freia
     loadn r1, #'u'
     cmp r0, r1
     jeq nave_ultimate
@@ -716,7 +908,6 @@ ritmo_normal:
 ritmo_salva:
     call grava_ritmo
     loadn r0, #0
-    store nave_tempo, r0
     store relogio, r0
     jmp jogo_tempo
 nave_esquerda:
@@ -725,24 +916,15 @@ nave_esquerda:
 nave_direita:
     loadn r0, #2
 nave_muda_direcao:
-    load r1, nave_direcao
-    cmp r0, r1
-    jeq jogo_tempo
     store nave_direcao, r0
-    ; Ao iniciar ou inverter o deslize, a nave anda na hora.
-    call desliza_passo
-    jmp jogo_tempo
-nave_freia:
-    loadn r0, #0
-    store nave_direcao, r0
-    store nave_tempo, r0
+    ; Cada evento do teclado move uma casa. Segurar usa a repeticao do sistema.
+    call nave_passo
     jmp jogo_tempo
 nave_atira:
     call dispara_rajada
     jmp jogo_tempo
 
 jogo_tempo:
-    call nave_desliza
     load r0, relogio
     inc r0
     store relogio, r0
@@ -795,22 +977,8 @@ jogo_verifica_vitoria:
     store vitoria_tempo, r0
     jmp jogo_loop
 
-; A nave tem seu proprio ritmo para responder mais rapido que os inimigos.
-nave_desliza:
-    ; A faixa 1042..1077 deixa espaco para as duas pontas do sprite de 3 casas.
-    load r0, nave_direcao
-    loadn r1, #0
-    cmp r0, r1
-    jeq desliza_fim
-    load r0, nave_tempo
-    inc r0
-    store nave_tempo, r0
-    load r1, nave_intervalo
-    cmp r0, r1
-    jle desliza_fim
-desliza_passo:
-    loadn r0, #0
-    store nave_tempo, r0
+; Movimento de uma casa, mantendo as asas dentro da moldura.
+nave_passo:
     load r0, nave_pos
     load r1, nave_direcao
     loadn r2, #1
@@ -2167,6 +2335,16 @@ extras_inicia:
     store tiro_inimigo_tempo, r0
     store atirador, r0
     store aviso_disparo, r0
+    store mira_inimiga, r0
+    load r1, fase_atual
+    dec r1
+    loadn r2, #cadencia_inimiga
+    add r1, r1, r2
+    loadi r1, r1
+    store tempo_aviso, r1
+    loadn r2, #6
+    add r1, r1, r2
+    store tempo_disparo, r1
     store combo, r0
     store combo_tempo, r0
     rts
@@ -2191,18 +2369,6 @@ configura_ritmo_onda:
 configura_ritmo_salva:
 grava_ritmo:
     store intervalo, r0
-    ; O primeiro toque anda na hora. Os demais passos dao tempo para mirar.
-    loadn r1, #2
-    div r1, r0, r1
-    load r2, fase_atual
-    loadn r3, #4
-    cmp r2, r3
-    jne grava_deslize
-    ; Na fase Patrulha, segurar a mira na mesma coluna ajuda.
-    mov r1, r0
-grava_deslize:
-    add r0, r0, r1
-    store nave_intervalo, r0
     rts
 
 ; Durante a pausa so ha leitura de teclado. Nenhum contador do jogo avanca.
@@ -2684,8 +2850,8 @@ chefe_colisoes:
 chefe_fim:
     rts
 
-; Permite um laser inimigo por vez. Os drones revezam os disparos,
-; e o chefe tem uma cadencia propria. O laser segue reto na coluna de origem.
+; Um laser por vez. A coluna e marcada antes de disparar para dar tempo
+; de desviar. A trajetoria vai do drone ate a coluna marcada.
 inimigo_dispara:
     load r0, resultado
     loadn r1, #0
@@ -2703,14 +2869,8 @@ inimigo_testa_tiro:
     load r0, tiro_inimigo_tempo
     inc r0
     store tiro_inimigo_tempo, r0
-    loadn r1, #18
-    loadn r2, #25
-    load r3, fase_atual
-    loadn r4, #7
-    cmp r3, r4
-    jne inimigo_testa_aviso
-    loadn r1, #10
-    loadn r2, #16
+    load r1, tempo_aviso
+    load r2, tempo_disparo
 inimigo_testa_aviso:
     cmp r0, r1
     jle inimigo_tiro_fim
@@ -2724,13 +2884,42 @@ inimigo_testa_aviso:
     ; Deixa pelo menos tres linhas para reagir ao laser.
     loadn r1, #920
     cmp r0, r1
-    jgr inimigo_proximo_atirador
+    jgr inimigo_cancela
     cmp r3, r2
     jgr inimigo_lanca_tiro
     store aviso_disparo, r0
+    load r0, mira_inimiga
+    loadn r1, #0
+    cmp r0, r1
+    jne inimigo_tiro_fim
+    ; O alvo fica fixo assim que o aviso aparece. Mover depois evita o tiro.
+    load r0, nave_pos
+    loadn r1, #40
+    mod r0, r0, r1
+    store mira_inimiga, r0
     rts
 inimigo_lanca_tiro:
+    ; Dispara so se o laser consegue chegar a coluna antes da linha da nave.
+    load r1, mira_inimiga
+    loadn r2, #40
+    mod r3, r0, r2
+    cmp r3, r1
+    jgr inimigo_distancia_esquerda
+    sub r3, r1, r3
+    jmp inimigo_confere_alcance
+inimigo_distancia_esquerda:
+    sub r3, r3, r1
+inimigo_confere_alcance:
+    div r4, r0, r2
+    loadn r1, #26
+    sub r4, r1, r4
+    add r4, r4, r4
+    cmp r3, r4
+    jgr inimigo_cancela
     store tiro_inimigo, r0
+    jmp inimigo_proximo_atirador
+inimigo_cancela:
+    call inimigo_limpa_mira
 inimigo_proximo_atirador:
     loadn r0, #0
     store tiro_inimigo_tempo, r0
@@ -2744,6 +2933,7 @@ inimigo_tiro_move:
     call apaga_tiro
     loadn r1, #40
     add r0, r0, r1
+    call inimigo_corrige_coluna
     store tiro_inimigo, r0
     loadn r1, #1040
     cmp r0, r1
@@ -2767,9 +2957,51 @@ inimigo_tiro_dano:
     loadn r0, #2
     store resultado, r0
 inimigo_tiro_remove:
+    call inimigo_limpa_mira
     loadn r0, #0
     store tiro_inimigo, r0
     call desenha_nave
+    rts
+; Ajusta uma ou duas casas na diagonal conforme a distancia ate o alvo.
+; Quando a coluna coincide, desce reto. Nunca muda a coluna que foi marcada.
+inimigo_corrige_coluna:
+    load r2, mira_inimiga
+    loadn r1, #0
+    cmp r2, r1
+    jeq corrige_fim
+    loadn r1, #40
+    mod r3, r0, r1
+    cmp r3, r2
+    jeq corrige_fim
+    jgr corrige_esquerda
+    sub r4, r2, r3
+    inc r0
+    loadn r1, #1
+    cmp r4, r1
+    jeq corrige_fim
+    inc r0
+    rts
+corrige_esquerda:
+    sub r4, r3, r2
+    dec r0
+    loadn r1, #1
+    cmp r4, r1
+    jeq corrige_fim
+    dec r0
+corrige_fim:
+    rts
+
+; O marcador aparece na linha logo acima da nave.
+inimigo_limpa_mira:
+    load r0, mira_inimiga
+    loadn r1, #0
+    cmp r0, r1
+    jeq limpa_mira_fim
+    store mira_inimiga, r1
+    loadn r1, #1000
+    add r0, r0, r1
+    call apaga_tiro
+limpa_mira_fim:
     rts
 inimigo_tiro_desenha:
     loadn r1, #2319 ; laser vermelho, tile 15
@@ -2780,7 +3012,7 @@ inimigo_tiro_fim:
 ; Repinta todas as camadas apos mover: uma explosao ou bonus nao apaga
 ; partes de outra nave. A onda aparece na frente dos demais objetos.
 arena_redesenha:
-    call desenha_estrelas
+    call desenha_fundo
     load r0, aviso_disparo
     loadn r1, #0
     cmp r0, r1
@@ -2788,6 +3020,15 @@ arena_redesenha:
     loadn r1, #2844 ; luz de carga amarela, tile 28
     outchar r1, r0
 arena_desenha_objetos:
+    load r0, mira_inimiga
+    loadn r1, #0
+    cmp r0, r1
+    jeq arena_restaura_sprites
+    loadn r1, #1000
+    add r0, r0, r1
+    loadn r1, #2844
+    outchar r1, r0
+arena_restaura_sprites:
     call onda_redesenha
     load r0, bonus_pos
     loadn r1, #0
@@ -2828,7 +3069,29 @@ pulsa_estrelas:
 pulsa_estrelas_fim:
     rts
 
-; Fundo primeiro, depois naves e tiros. As estrelas nao entram nas colisoes.
+; Cada par da tabela guarda uma posicao e um tile ja combinado com sua cor.
+; O zero termina a lista. As imagens ficam atras dos objetos da arena.
+desenha_fundo:
+    call desenha_estrelas
+    load r0, fase_atual
+    dec r0
+    loadn r1, #cenarios
+    add r0, r0, r1
+    loadi r0, r0
+    loadn r3, #0
+cenario_loop:
+    loadi r1, r0
+    cmp r1, r3
+    jeq cenario_fim
+    inc r0
+    loadi r2, r0
+    outchar r2, r1
+    inc r0
+    jmp cenario_loop
+cenario_fim:
+    rts
+
+; As estrelas nao entram nas colisoes.
 desenha_estrelas:
     loadn r0, #estrelas_pos
     loadn r1, #32

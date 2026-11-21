@@ -1,6 +1,6 @@
 # ICMC Invaders
 
-Jogo de nave em Assembly para o processador ICMC, inspirado em Space Invaders e Galaga. O jogador desliza pela parte inferior da tela, atira nos inimigos e usa uma onda de choque para ajudar a cumprir a meta de cada fase. O menu traz uma referência ao ICMC/USP.
+Jogo de nave em Assembly para o processador ICMC, inspirado em Space Invaders e Galaga. O jogador move a nave pela parte inferior da tela, atira nos inimigos e usa uma onda de choque para ajudar a cumprir a meta de cada fase. O menu traz uma referência ao ICMC/USP.
 
 ## Integrantes
 
@@ -53,8 +53,7 @@ O arquivo C incluído é a versão didática em console do Simple Simulator. Nel
 | W / S e Enter | Escolher e confirmar uma opção nos menus. |
 | A, na seleção de fases | Voltar ao menu principal. |
 | I, na seleção de fases | Iniciar o modo infinito. |
-| A / D, durante a partida | Deslizar para a esquerda ou para a direita. |
-| X | Frear a nave. As bordas também interrompem o movimento. |
+| A / D, durante a partida | Mover uma casa para a esquerda ou para a direita. |
 | Espaço | Atirar. |
 | U | Usar a onda de choque quando a barra estiver cheia. |
 | P | Pausar ou continuar. |
@@ -63,9 +62,7 @@ O arquivo C incluído é a versão didática em console do Simple Simulator. Nel
 | Enter, no resultado | Avançar após vencer ou tentar novamente após perder. |
 | R, no resultado | Reiniciar a tentativa na fase atual; no infinito, voltar à primeira onda. |
 
-O teclado do simulador informa a tecla pressionada, mas não avisa quando ela foi solta. Por isso A/D iniciam o movimento contínuo, e X para a nave.
-
-A nave dá um passo no primeiro toque e ao inverter a direção. A campanha abre no ritmo normal, e a tecla 1 dá mais tempo para mirar e desviar.
+Segurar A/D pode repetir o movimento conforme a configuração do teclado. A campanha abre no ritmo normal, e a tecla 1 dá mais tempo para mirar e desviar.
 
 ## Fases e modo infinito
 
@@ -81,7 +78,9 @@ A nave dá um passo no primeiro toque e ao inverter a direção. A campanha abre
 
 Nas seis primeiras fases, os drones cruzam a arena juntos. Às vezes, a frota faz uma pausa curta e inverte a direção no meio da tela. A descida de uma linha só acontece nas laterais. Se a frota alcançar a base, ela volta ao topo e causa um único dano.
 
-Cada fase da campanha começa com três vidas. Os inimigos se revezam para disparar. Uma luz amarela indica quem vai atirar, e o laser vermelho desce na coluna de onde saiu. A pontuação continua ao avançar de fase.
+Cada fase da campanha começa com três vidas. Os inimigos se revezam para disparar e esperam menos nas fases mais intensas. Uma luz amarela mostra quem vai atirar e marca a coluna do jogador perto da base. O laser segue até essa coluna. Saia da marca para desviar. A pontuação continua ao avançar de fase.
+
+O fundo muda a cada fase. Cinturão de asteroides, planeta com anéis, nebulosa, estação orbital, cometas, lua partida e portais do chefão usam blocos desenhados no charmap.
 
 No modo infinito, as seis formações comuns se repetem, sem o chefe. A próxima onda começa automaticamente, conservando vidas e pontos. A velocidade aumenta até a onda 16; o indicador de onda para em 99. Escolher 1 ou 2 altera manualmente o ritmo da onda atual.
 
@@ -105,10 +104,10 @@ As posições da tela são calculadas por `linha * 40 + coluna`. O início de `J
 
 Os inimigos usam vetores de até oito posições; os tiros do jogador têm 32 espaços. O chefe usa o primeiro espaço de inimigo e possui uma rotina própria de movimento. A leitura do teclado ocorre entre as atualizações dos quadros, e a pausa não avança os temporizadores.
 
-Cada desenho do charmap usa blocos de 8 × 8 pixels. Os códigos de 1 a 28 guardam os desenhos do jogo, e as letras e os números continuam disponíveis para o placar e os menus. A nave e os drones juntam três blocos na horizontal. O chefe junta sete. O Assembly envia o código do bloco e a cor pela instrução `OUTCHAR`. As estrelas alternam o brilho em grupos e são desenhadas antes dos objetos da arena.
+Cada desenho do charmap usa blocos de 8 × 8 pixels. Os códigos de 1 a 28 guardam os sprites da partida. Os cenários usam 29 a 31, 96 a 123 e 125. O texto do jogo usa letras maiúsculas e números. A nave e os drones juntam três blocos na horizontal. O chefe junta sete. O Assembly envia o código do bloco e a cor pela instrução `OUTCHAR`. O fundo é desenhado antes dos objetos da arena.
 
 ## Verificação e referência do simulador
 
-O jogo foi montado com o montador original e passou em 25 testes locais que executam as instruções do arquivo compilado. Eles verificam colisões, limites da tela, bônus, pausa, manobras da frota e o trajeto do laser inimigo. O ritmo em tempo real depende do simulador gráfico.
+O jogo foi montado com o montador original e passou em 27 testes locais que executam as instruções do arquivo compilado. Eles verificam movimento por toque, colisões, limites da tela, bônus, pausa, manobras da frota e o laser com mira marcada. O ritmo em tempo real depende do simulador gráfico.
 
 O processador e as ferramentas da disciplina são do projeto [Processador-ICMC, de Eduardo Valle Simões](https://github.com/simoesusp/Processador-ICMC). O arquivo C acompanha a adaptação para Windows que já estava no material local. Os comentários e a identificação existentes nesse fonte foram preservados.
