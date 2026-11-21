@@ -125,7 +125,9 @@ passo_inimigo: var #1
 cor_inimigo: var #1
 grupo_coluna: var #1
 grupo_direcao: var #1
-grupo_delta: var #1 ; 1 = direita, 2 = esquerda
+grupo_delta: var #1 ; 0 = pausa, 1 = direita, 2 = esquerda
+grupo_finta: var #1 ; uma manobra por travessia
+grupo_sorte: var #1 ; estado do gerador de manobras
 grupo_virou: var #1 ; a formacao desce quando este valor e 1
 acertos: var #1 ; progresso da fase; separado da pontuacao acumulada
 vidas: var #1
@@ -136,12 +138,6 @@ recarga: var #1 ; quadros restantes ate poder disparar outra vez
 proxima_coluna: var #1
 resultado: var #1 ; 0 = jogando, 1 = venceu, 2 = perdeu
 jogo_nome: string "ICMC INVADERS"
-jogo_objetivo: string "CUMPRA A META. VOCE TEM 3 VIDAS."
-intro_naves: string "NAVES NA TELA:"
-intro_meta: string "META:"
-jogo_controles: string "A/D: DESLIZAR  X: FREAR  S: FASES"
-jogo_armas: string "ESPACO: TIRO  U: ONDA  P: PAUSA"
-jogo_ritmo: string "1: CALMO   2: NORMAL"
 jogo_acertos: string "ACERTOS:"
 jogo_meta: string "/"
 jogo_vidas: string "VIDAS:"
@@ -181,21 +177,6 @@ static niveis_lista + #6, #nivel_7
 
 
 ; Cores, formas iniciais e intervalo em quadros de cada frota.
-fase_dica_1: string "ATIRE NOS DRONES EM LINHA."
-fase_dica_2: string "A FROTA DESCE QUANDO MUDA DE LADO."
-fase_dica_3: string "USE OS ESPACOS PARA DESVIAR."
-fase_dica_4: string "FREIE COM X PARA MIRAR NA FROTA."
-fase_dica_5: string "A FORMACAO EM V AVANCA JUNTA."
-fase_dica_6: string "MIRE NOS ESPACOS ENTRE OS LASERS."
-fase_dica_7: string "DESVIE DOS TIROS. U ATINGE O CHEFE."
-fase_dicas: var #7
-static fase_dicas + #0, #fase_dica_1
-static fase_dicas + #1, #fase_dica_2
-static fase_dicas + #2, #fase_dica_3
-static fase_dicas + #3, #fase_dica_4
-static fase_dicas + #4, #fase_dica_5
-static fase_dicas + #5, #fase_dica_6
-static fase_dicas + #6, #fase_dica_7
 fase_cores: var #7
 static fase_cores + #0, #512
 static fase_cores + #1, #3584
@@ -288,16 +269,12 @@ rajada_pos: var #1
 rajada_restante: var #1
 infinito_ajuda: string "I: MODO INFINITO"
 hud_pontos: string "PTS:"
-hud_combo: string "X"
-hud_duplo: string "D:"
-hud_escudo: string "E:"
 hud_pausa: string "PAUSADO - P PARA CONTINUAR"
 hud_onda: string "ONDA:"
 hud_fase: string "FASE:"
 linha_hud_vazia: string "                                  "
 hud_recorde: string "RECORDE:"
 hud_bonus: string "D: DUPLO  E: ESCUDO  U: ENERGIA"
-ritmo_curto: string "1/2: RITMO"
 ; Sequencias de codigos do charmap. Zero encerra a rotina imprime_str.
 drone_sprite: var #4
 static drone_sprite + #0, #4
@@ -322,6 +299,7 @@ main:
     store recorde, r0
     store pontos, r0
     store modo_infinito, r0
+    store grupo_sorte, r0
     loadn r0, #1
     store fase_atual, r0
     loadn r0, #0
@@ -563,43 +541,7 @@ tela_jogar:
     loadi r1, r1
     loadn r2, #2816
     call imprime_str
-    loadn r0, #404
-    loadn r1, #jogo_objetivo
-    loadn r2, #1792
-    call imprime_str
-    loadn r0, #444
-    loadn r1, #intro_naves
-    call imprime_str
-    load r0, quantidade_inimigos
-    loadn r1, #'0'
-    add r0, r0, r1
-    loadn r1, #458
-    outchar r0, r1
-    loadn r0, #464
-    loadn r1, #intro_meta
-    call imprime_str
-    load r0, meta_acertos
-    loadn r1, #470
-    call imprime_numero
-    loadn r0, #483
-    load r1, fase_atual
-    dec r1
-    loadn r2, #fase_dicas
-    add r1, r1, r2
-    loadi r1, r1
-    loadn r2, #2816
-    call imprime_str
-    loadn r0, #563
-    loadn r1, #jogo_controles
-    loadn r2, #1792
-    call imprime_str
-    loadn r0, #645
-    loadn r1, #jogo_armas
-    call imprime_str
-    loadn r0, #690
-    loadn r1, #jogo_ritmo
-    call imprime_str
-    loadn r0, #767
+    loadn r0, #571
     loadn r1, #msg_inicio
     loadn r2, #2816
     call imprime_str
@@ -622,31 +564,14 @@ jogo_comeca:
     call extras_inicia
     call limpa_tela
     call desenha_moldura
-    loadn r0, #12
-    load r1, fase_atual
-    dec r1
-    loadn r2, #niveis_lista
-    add r1, r1, r2
-    loadi r1, r1
-    loadn r2, #2816
-    call imprime_str
-    loadn r0, #1084
-    loadn r1, #jogo_controles
-    loadn r2, #1792
-    call imprime_str
-    loadn r0, #1124
-    loadn r1, #jogo_armas
-    call imprime_str
     loadn r0, #140
     loadn r1, #ultimate_label
+    loadn r2, #2816
     call imprime_str
-    loadn r0, #108
-    loadn r1, #ritmo_curto
-    call imprime_str
-    loadn r0, #44
+    loadn r0, #124
     loadn r1, #jogo_acertos
     call imprime_str
-    loadn r0, #54
+    loadn r0, #134
     loadn r1, #jogo_meta
     call imprime_str
     loadn r0, #64
@@ -704,6 +629,14 @@ jogo_limpa_tiros:
     store grupo_delta, r0
     loadn r0, #0
     store grupo_virou, r0
+    store grupo_finta, r0
+    ; Mistura o tempo no menu com o estado da partida anterior.
+    load r0, contador_anim
+    load r1, grupo_sorte
+    add r0, r0, r1
+    loadn r1, #251
+    mod r0, r0, r1
+    store grupo_sorte, r0
     call configura_ritmo
     load r0, vidas_reserva
     store vidas, r0
@@ -1281,10 +1214,10 @@ apaga_tiro:
 ; Dois digitos permitem metas e pontuacoes acima de 9.
 jogo_placar:
     load r0, acertos
-    loadn r1, #52
+    loadn r1, #132
     call imprime_numero
     load r0, meta_acertos
-    loadn r1, #55
+    loadn r1, #135
     call imprime_numero
     load r0, vidas
     loadn r1, #'0'
@@ -1631,6 +1564,8 @@ alvos_loop:
     cmp r1, r2
     jne alvo_desce
     load r1, grupo_delta
+    cmp r1, r2
+    jeq alvo_grava
     loadn r2, #1
     cmp r1, r2
     jeq alvo_direita
@@ -1691,6 +1626,8 @@ frota_reinicia:
     loadn r0, #1
     store grupo_direcao, r0
     store grupo_delta, r0
+    loadn r0, #0
+    store grupo_finta, r0
     loadn r4, #0
     loadn r5, #alvos
 frota_reinicia_loop:
@@ -1709,6 +1646,11 @@ frota_reinicia_loop:
 grupo_atualiza:
     loadn r0, #0
     store grupo_virou, r0
+    call grupo_tenta_finta
+    load r0, grupo_delta
+    loadn r2, #0
+    cmp r0, r2
+    jeq grupo_passo_fim
     load r0, grupo_coluna
     load r1, grupo_direcao
     loadn r2, #0
@@ -1731,6 +1673,8 @@ grupo_esquerda:
     loadn r1, #1
     store grupo_direcao, r1
 grupo_marca_descida:
+    loadn r1, #0
+    store grupo_finta, r1
     loadn r1, #1
     store grupo_virou, r1
     rts
@@ -1740,6 +1684,42 @@ grupo_esquerda_passo:
 grupo_salva:
     store grupo_coluna, r0
     store grupo_delta, r1
+grupo_passo_fim:
+    rts
+
+; No meio da tela, a frota pode pausar e inverter sem perder altura.
+; Uma unica manobra por travessia garante que ela sempre chegue a uma borda.
+grupo_tenta_finta:
+    loadn r2, #1
+    store grupo_delta, r2
+    load r0, grupo_finta
+    cmp r0, r2
+    jeq grupo_finta_fim
+    load r0, grupo_coluna
+    loadn r1, #15
+    cmp r0, r1
+    jle grupo_finta_fim
+    loadn r1, #24
+    cmp r0, r1
+    jgr grupo_finta_fim
+    load r0, grupo_sorte
+    loadn r1, #17
+    mul r0, r0, r1
+    loadn r1, #31
+    add r0, r0, r1
+    loadn r1, #251
+    mod r0, r0, r1
+    store grupo_sorte, r0
+    loadn r1, #15
+    cmp r0, r1
+    jgr grupo_finta_fim
+    store grupo_finta, r2
+    load r0, grupo_direcao
+    sub r0, r2, r0
+    store grupo_direcao, r0
+    loadn r0, #0
+    store grupo_delta, r0
+grupo_finta_fim:
     rts
 
 jogo_ganhou:
@@ -2244,8 +2224,8 @@ pausa_espera:
     jne pausa_espera
 pausa_volta:
     loadn r0, #1124
-    loadn r1, #jogo_armas
-    loadn r2, #1792
+    loadn r1, #linha_hud_vazia
+    loadn r2, #0
     call imprime_str
     jmp jogo_loop
 
@@ -2419,7 +2399,6 @@ extras_quadro:
     cmp r0, r1
     jne extras_duplo
     store combo, r0
-    call extras_placar
 extras_duplo:
     load r0, duplo_tempo
     loadn r1, #0
@@ -2427,9 +2406,6 @@ extras_duplo:
     jeq extras_bonus
     dec r0
     store duplo_tempo, r0
-    cmp r0, r1
-    jne extras_bonus
-    call extras_placar
 extras_bonus:
     call bonus_atualiza
 extras_quadro_fim:
@@ -2479,12 +2455,10 @@ bonus_coleta:
 bonus_duplo:
     loadn r0, #180
     store duplo_tempo, r0
-    call extras_placar
     jmp bonus_remove
 bonus_escudo:
     loadn r0, #1
     store escudo, r0
-    call extras_placar
 bonus_remove:
     loadn r0, #0
     store bonus_pos, r0
@@ -2510,51 +2484,21 @@ bonus_imprime:
 bonus_fim:
     rts
 
-; Atualiza pontos, combo, efeitos e fase/onda nas quatro primeiras linhas.
+; Mostra a pontuacao e o numero da fase ou onda.
 ; Os push/pop permitem chamar esta rotina de dentro das colisoes.
 extras_placar:
     push r0
     push r1
     push r2
     push r3
-    loadn r0, #84
+    loadn r0, #44
     loadn r1, #hud_pontos
     loadn r2, #2816
     call imprime_str
     load r0, pontos
-    loadn r1, #89
+    loadn r1, #49
     call imprime_cinco
-    ; HUD fica nas quatro primeiras linhas, nunca na arena.
-    loadn r0, #74
-    loadn r1, #hud_combo
-    call imprime_str
-    load r0, combo
-    loadn r1, #'0'
-    add r0, r0, r1
-    loadn r1, #75
-    outchar r0, r1
-    loadn r1, #hud_duplo
-    loadn r0, #98
-    call imprime_str
-    load r0, duplo_tempo
-    loadn r1, #0
-    cmp r0, r1
-    jeq hud_duplo_zero
-    loadn r0, #1
-hud_duplo_zero:
-    loadn r1, #'0'
-    add r0, r0, r1
-    loadn r1, #100
-    outchar r0, r1
-    loadn r0, #103
-    loadn r1, #hud_escudo
-    call imprime_str
-    load r0, escudo
-    loadn r1, #'0'
-    add r0, r0, r1
-    loadn r1, #105
-    outchar r0, r1
-    loadn r0, #124
+    loadn r0, #17
     loadn r1, #hud_onda
     load r3, modo_infinito
     loadn r2, #0
@@ -2570,7 +2514,7 @@ hud_modo_onda:
     jne hud_modo_numero
     load r0, fase_atual
 hud_modo_numero:
-    loadn r1, #129
+    loadn r1, #22
     call imprime_numero
     pop r3
     pop r2
@@ -2621,10 +2565,6 @@ resultado_pontos:
     load r0, recorde
     loadn r1, #585
     call imprime_cinco
-    loadn r0, #844
-    loadn r1, #hud_bonus
-    loadn r2, #512
-    call imprime_str
     rts
 
 ; Chefe usa o primeiro slot; os vinte acertos sao seus pontos de vida.
