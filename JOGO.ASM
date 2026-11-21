@@ -75,7 +75,7 @@ tiros: var #32 ; posicao do projetil; zero indica um espaco livre
 tiro_direcoes: var #32 ; 0 = vertical, 1/2 = diagonais para cima, 6/7 = para baixo
 nave_direcao: var #1 ; 0 = parada, 1 = esquerda, 2 = direita
 nave_tempo: var #1 ; contador separado para o deslize
-nave_intervalo: var #1 ; tres quartos do intervalo dos inimigos
+nave_intervalo: var #1 ; intervalo entre passos depois do primeiro toque
 estrelas_tempo: var #1
 estrelas_fase: var #1
 ; As estrelas ficam entre o placar e a nave, longe da moldura.
@@ -189,7 +189,7 @@ static niveis_lista + #6, #nivel_7
 fase_dica_1: string "FORMACAO EM LINHA. MIRE COM CALMA."
 fase_dica_2: string "CHUVA: NAVES CAEM EM LINHA RETA."
 fase_dica_3: string "ZIGUE-ZAGUE: DUAS CASAS POR PASSO."
-fase_dica_4: string "CACADORAS SEGUEM A SUA NAVE."
+fase_dica_4: string "CACADORAS TE SEGUEM. X PARA MIRAR."
 fase_dica_5: string "FORMACAO EM V. VIRAR FAZ DESCER."
 fase_dica_6: string "MERGULHOS DIAGONAIS NA SUA DIRECAO."
 fase_dica_7: string "DESVIE DOS TIROS. U ATINGE O CHEFE."
@@ -213,7 +213,7 @@ fase_passos: var #7
 static fase_passos + #0, #2
 static fase_passos + #1, #5
 static fase_passos + #2, #2
-static fase_passos + #3, #2
+static fase_passos + #3, #3
 static fase_passos + #4, #1
 static fase_passos + #5, #3
 static fase_passos + #6, #2
@@ -2305,9 +2305,17 @@ configura_ritmo_onda:
 configura_ritmo_salva:
 grava_ritmo:
     store intervalo, r0
-    loadn r1, #4
+    ; O primeiro toque anda na hora. Os demais passos dao tempo para mirar.
+    loadn r1, #2
     div r1, r0, r1
-    sub r0, r0, r1
+    load r2, fase_atual
+    loadn r3, #4
+    cmp r2, r3
+    jne grava_deslize
+    ; Na fase das cacadoras, segurar a mira na mesma coluna ajuda.
+    mov r1, r0
+grava_deslize:
+    add r0, r0, r1
     store nave_intervalo, r0
     rts
 
