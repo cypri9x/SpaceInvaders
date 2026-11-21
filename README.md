@@ -20,7 +20,7 @@ Além do vídeo, todos os integrantes precisam apresentar o trabalho pessoalment
 | Arquivo | Conteúdo |
 | --- | --- |
 | [JOGO.ASM](JOGO.ASM) | Código completo do jogo, com comentários sobre as variáveis e as rotinas. |
-| [CHARMAP.MIF](CHARMAP.MIF) | Mapa com os desenhos da nave, dos inimigos, dos tiros, dos bônus e da onda de choque. |
+| [CHARMAP.MIF](CHARMAP.MIF) | Mapa com os desenhos da nave, dos inimigos, dos tiros, dos bônus, da onda de choque e das estrelas. |
 | [simple_simulator_template.c](simple_simulator_template.c) | Arquivo C inteiro do Simple Simulator recebido com o material, sem alterações. |
 
 O executável do simulador, o editor, as bibliotecas e os arquivos gerados pela montagem não fazem parte desta entrega.
@@ -65,6 +65,8 @@ O arquivo C incluído é a versão didática em console do Simple Simulator. Nel
 
 O teclado do simulador informa a tecla pressionada, mas não avisa quando ela foi solta. Por isso A/D iniciam o movimento contínuo, e X para a nave.
 
+A nave dá um passo no primeiro toque e ao inverter a direção. A campanha abre no ritmo normal, e a tecla 1 dá mais tempo para mirar e desviar.
+
 ## Fases e modo infinito
 
 | Fase | Padrão | Meta |
@@ -101,7 +103,7 @@ As posições da tela são calculadas por `linha * 40 + coluna`. O início de `J
 
 Os inimigos usam vetores de até oito posições; os tiros do jogador têm 32 espaços. O chefe usa o primeiro espaço de inimigo e possui uma rotina própria de movimento. A leitura do teclado ocorre entre as atualizações dos quadros, e a pausa não avança os temporizadores.
 
-Cada desenho do charmap usa blocos de 8 × 8 pixels. Os códigos de 1 a 25 guardam os desenhos do jogo, e as letras e os números continuam disponíveis para o placar e os menus. A nave e os drones juntam três blocos na horizontal. O chefe junta sete. O Assembly envia o código do bloco e a cor pela instrução `OUTCHAR`.
+Cada desenho do charmap usa blocos de 8 × 8 pixels. Os códigos de 1 a 27 guardam os desenhos do jogo, e as letras e os números continuam disponíveis para o placar e os menus. A nave e os drones juntam três blocos na horizontal. O chefe junta sete. O Assembly envia o código do bloco e a cor pela instrução `OUTCHAR`. As estrelas alternam o brilho em grupos e são desenhadas antes dos objetos da arena.
 
 ## Verificação e referência do simulador
 

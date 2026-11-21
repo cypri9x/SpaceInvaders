@@ -75,6 +75,43 @@ tiros: var #32 ; posicao do projetil; zero indica um espaco livre
 tiro_direcoes: var #32 ; 0 = vertical, 1/2 = diagonais para cima, 6/7 = para baixo
 nave_direcao: var #1 ; 0 = parada, 1 = esquerda, 2 = direita
 nave_tempo: var #1 ; contador separado para o deslize
+nave_intervalo: var #1 ; metade do intervalo dos inimigos
+estrelas_tempo: var #1
+estrelas_fase: var #1
+; As estrelas ficam entre o placar e a nave, longe da moldura.
+estrelas_pos: var #32
+static estrelas_pos + #0, #182
+static estrelas_pos + #1, #207
+static estrelas_pos + #2, #229
+static estrelas_pos + #3, #267
+static estrelas_pos + #4, #303
+static estrelas_pos + #5, #352
+static estrelas_pos + #6, #375
+static estrelas_pos + #7, #403
+static estrelas_pos + #8, #432
+static estrelas_pos + #9, #455
+static estrelas_pos + #10, #487
+static estrelas_pos + #11, #513
+static estrelas_pos + #12, #548
+static estrelas_pos + #13, #584
+static estrelas_pos + #14, #597
+static estrelas_pos + #15, #631
+static estrelas_pos + #16, #665
+static estrelas_pos + #17, #678
+static estrelas_pos + #18, #696
+static estrelas_pos + #19, #725
+static estrelas_pos + #20, #751
+static estrelas_pos + #21, #790
+static estrelas_pos + #22, #809
+static estrelas_pos + #23, #838
+static estrelas_pos + #24, #853
+static estrelas_pos + #25, #881
+static estrelas_pos + #26, #905
+static estrelas_pos + #27, #937
+static estrelas_pos + #28, #956
+static estrelas_pos + #29, #983
+static estrelas_pos + #30, #1006
+static estrelas_pos + #31, #1024
 energia: var #1 ; carga da onda: de 0 a 6 segmentos
 energia_tempo: var #1
 vitoria_tempo: var #1
@@ -273,11 +310,6 @@ hud_recorde: string "RECORDE:"
 hud_bonus: string "D: DUPLO  E: ESCUDO  U: ENERGIA"
 ritmo_curto: string "1/2: RITMO"
 ; Sequencias de codigos do charmap. Zero encerra a rotina imprime_str.
-nave_sprite: var #4
-static nave_sprite + #0, #1
-static nave_sprite + #1, #2
-static nave_sprite + #2, #3
-static nave_sprite + #3, #0
 drone_sprite: var #4
 static drone_sprite + #0, #4
 static drone_sprite + #1, #5
@@ -642,6 +674,8 @@ jogo_comeca:
     store onda_linha, r0
     store nave_direcao, r0
     store nave_tempo, r0
+    store estrelas_tempo, r0
+    store estrelas_fase, r0
     loadn r1, #alvos
     loadn r2, #24 ; oito alvos, oito direcoes e oito protecoes
 jogo_limpa_inimigos:
@@ -693,6 +727,7 @@ jogo_limpa_tiros:
     store nave_pos, r0
     loadn r0, #8
     store proxima_coluna, r0
+    call desenha_estrelas
     loadn r4, #0
 jogo_cria_inimigos:
     call novo_alvo
@@ -707,6 +742,9 @@ jogo_cria_inimigos:
 ; o intervalo, para a nave continuar respondendo durante a espera do quadro.
 jogo_loop:
     inchar r0
+    loadn r1, #255
+    cmp r0, r1
+    jeq jogo_tempo
     loadn r1, #'p'
     cmp r0, r1
     jeq jogo_pausa
@@ -754,23 +792,28 @@ jogo_loop:
     jeq ritmo_normal
     jmp jogo_tempo
 ritmo_calmo:
-    loadn r0, #40000
+    loadn r0, #7200
     jmp ritmo_salva
 ritmo_normal:
-    loadn r0, #20000
+    loadn r0, #4200
 ritmo_salva:
-    store intervalo, r0
+    call grava_ritmo
     loadn r0, #0
     store nave_tempo, r0
     store relogio, r0
     jmp jogo_tempo
 nave_esquerda:
     loadn r0, #1
-    store nave_direcao, r0
-    jmp jogo_tempo
+    jmp nave_muda_direcao
 nave_direita:
     loadn r0, #2
+nave_muda_direcao:
+    load r1, nave_direcao
+    cmp r0, r1
+    jeq jogo_tempo
     store nave_direcao, r0
+    ; Ao iniciar ou inverter o deslize, a nave anda na hora.
+    call desliza_passo
     jmp jogo_tempo
 nave_freia:
     loadn r0, #0
@@ -806,6 +849,7 @@ jogo_quadro:
     call atualiza_tiros
     call atualiza_alvos
     call onda_atualiza
+    call pulsa_estrelas
     call arena_redesenha
     load r0, resultado
     loadn r1, #1
@@ -833,7 +877,7 @@ jogo_verifica_vitoria:
     store vitoria_tempo, r0
     jmp jogo_loop
 
-; Deslize mais controlado: um passo por quadro, sem repeticao do teclado.
+; A nave tem seu proprio ritmo para responder mais rapido que os inimigos.
 nave_desliza:
     ; A faixa 1042..1077 deixa espaco para as duas pontas do sprite de 3 casas.
     load r0, nave_direcao
@@ -843,9 +887,10 @@ nave_desliza:
     load r0, nave_tempo
     inc r0
     store nave_tempo, r0
-    load r1, intervalo
+    load r1, nave_intervalo
     cmp r0, r1
     jle desliza_fim
+desliza_passo:
     loadn r0, #0
     store nave_tempo, r0
     load r0, nave_pos
@@ -945,14 +990,10 @@ onda_atualiza:
     jle onda_termina
     store onda_linha, r0
     call onda_dano
-    call onda_redesenha
-    loadn r1, #1
-    call onda_pinta
     rts
 onda_termina:
     loadn r0, #0
     store onda_linha, r0
-    call onda_redesenha
 onda_fim:
     rts
 
@@ -1187,9 +1228,20 @@ desenha_nave:
     push r2
     load r0, nave_pos
     dec r0
-    loadn r1, #nave_sprite
-    loadn r2, #3584
-    call imprime_str
+    loadn r1, #3585 ; asa aqua, tile 1
+    outchar r1, r0
+    loadn r1, #2818 ; cabine amarela, tile 2
+    load r2, escudo
+    loadn r0, #0
+    cmp r2, r0
+    jeq nave_cabine
+    loadn r1, #2562 ; cabine verde quando ha escudo
+nave_cabine:
+    load r0, nave_pos
+    outchar r1, r0
+    inc r0
+    loadn r1, #3587 ; asa aqua, tile 3
+    outchar r1, r0
     pop r2
     pop r1
     pop r0
@@ -2228,10 +2280,10 @@ extras_inicia:
     store combo_tempo, r0
     rts
 
-; Campanha usa 40000 passagens por quadro. No infinito, tira 2000 por onda,
-; ate o limite da onda 16: 8000 passagens. Evita intervalo zero ou negativo.
+; A campanha comeca no ritmo normal. No infinito, cada onda tira 125
+; passagens do intervalo, ate o minimo de 2200 passagens na onda 16.
 configura_ritmo:
-    loadn r0, #40000
+    loadn r0, #4200
     load r1, modo_infinito
     loadn r2, #0
     cmp r1, r2
@@ -2242,11 +2294,15 @@ configura_ritmo:
     jle configura_ritmo_onda
     loadn r1, #16
 configura_ritmo_onda:
-    loadn r2, #2000
+    loadn r2, #125
     mul r1, r1, r2
     sub r0, r0, r1
 configura_ritmo_salva:
+grava_ritmo:
     store intervalo, r0
+    loadn r1, #2
+    div r0, r0, r1
+    store nave_intervalo, r0
     rts
 
 ; Durante a pausa so ha leitura de teclado. Nenhum contador do jogo avanca.
@@ -2336,7 +2392,7 @@ rajada_avanca:
     store rajada_pos, r0
     jmp rajada_proximo
 rajada_recarga:
-    loadn r0, #3
+    loadn r0, #2
     store recarga, r0
 rajada_fim:
     rts
@@ -2443,6 +2499,7 @@ extras_quadro:
     cmp r0, r1
     jne extras_duplo
     store combo, r0
+    call extras_placar
 extras_duplo:
     load r0, duplo_tempo
     loadn r1, #0
@@ -2450,10 +2507,12 @@ extras_duplo:
     jeq extras_bonus
     dec r0
     store duplo_tempo, r0
+    cmp r0, r1
+    jne extras_bonus
+    call extras_placar
 extras_bonus:
     call bonus_atualiza
     call chefe_projetil
-    call extras_placar
 extras_quadro_fim:
     rts
 
@@ -2501,10 +2560,12 @@ bonus_coleta:
 bonus_duplo:
     loadn r0, #180
     store duplo_tempo, r0
+    call extras_placar
     jmp bonus_remove
 bonus_escudo:
     loadn r0, #1
     store escudo, r0
+    call extras_placar
 bonus_remove:
     loadn r0, #0
     store bonus_pos, r0
@@ -2828,6 +2889,7 @@ chefe_tiro_fim:
 ; Repinta todas as camadas apos mover: uma explosao ou bonus nao apaga
 ; partes de outra nave. A onda aparece na frente dos demais objetos.
 arena_redesenha:
+    call desenha_estrelas
     call onda_redesenha
     load r0, bonus_pos
     loadn r1, #0
@@ -2848,4 +2910,52 @@ arena_onda:
     loadn r1, #1
     call onda_pinta
 arena_fim:
+    rts
+
+; Muda o brilho em grupos, para o fundo nunca piscar inteiro.
+pulsa_estrelas:
+    load r0, estrelas_tempo
+    inc r0
+    store estrelas_tempo, r0
+    loadn r1, #6
+    cmp r0, r1
+    jne pulsa_estrelas_fim
+    loadn r0, #0
+    store estrelas_tempo, r0
+    load r0, estrelas_fase
+    inc r0
+    loadn r1, #4
+    mod r0, r0, r1
+    store estrelas_fase, r0
+pulsa_estrelas_fim:
+    rts
+
+; Fundo primeiro, depois naves e tiros. As estrelas nao entram nas colisoes.
+desenha_estrelas:
+    loadn r0, #estrelas_pos
+    loadn r1, #32
+    load r2, estrelas_fase
+    loadn r5, #4
+estrelas_loop:
+    loadi r3, r0
+    loadn r4, #2074 ; ponto cinza (tile 26)
+    mod r6, r2, r5
+    loadn r7, #0
+    cmp r6, r7
+    jeq estrela_acesa
+    loadn r7, #2
+    cmp r6, r7
+    jne estrela_pinta
+    loadn r4, #1050 ; ponto azul escuro
+    jmp estrela_pinta
+estrela_acesa:
+    loadn r4, #1819 ; brilho prateado (tile 27)
+estrela_pinta:
+    outchar r4, r3
+    inc r0
+    inc r2
+    dec r1
+    loadn r7, #0
+    cmp r1, r7
+    jne estrelas_loop
     rts
